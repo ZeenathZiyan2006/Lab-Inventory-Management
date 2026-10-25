@@ -1,0 +1,82 @@
+@import './styles/neon-galaxy.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color-scheme: light;
+  }
+
+  /* High contrast focus rings for accessibility */
+  :focus-visible {
+    outline: 2px solid #800B35;
+    outline-offset: 2px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-900 font-semibold tracking-tight;
+  }
+}
+
+/* Aesthetic Components & Micro-styles */
+@layer components {
+  /* Crisp aesthetic card with high-contrast boundary */
+  .card-aesthetic {
+    @apply bg-white rounded-2xl border border-slate-200/90 shadow-aesthetic transition-all duration-200 hover:shadow-aesthetic-hover;
+  }
+
+  /* Status badge base with verified contrast ratio >= 4.5:1 */
+  .badge-working {
+    @apply bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs;
+  }
+  .badge-fault {
+    @apply bg-rose-50 text-rose-800 border border-rose-300 font-semibold px-2.5 py-0.5 rounded-full text-xs;
+  }
+  .badge-warning {
+    @apply bg-amber-50 text-amber-900 border border-amber-300 font-semibold px-2.5 py-0.5 rounded-full text-xs;
+  }
+  .badge-info {
+    @apply bg-sky-50 text-sky-800 border border-sky-300 font-semibold px-2.5 py-0.5 rounded-full text-xs;
+  }
+}
+
+/* Modern High-Contrast Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Reinforced Contrast for users with high-contrast accessibility preferences */
+@media (prefers-contrast: more) {
+  body {
+    @apply text-black bg-white;
+  }
+  .card-aesthetic, aside, header {
+    border-color: #000000 !important;
+  }
+  button, input, select, textarea {
+    border-color: #000000 !important;
+  }
+  * {
+    scrollbar-color: #000000 #ffffff;
+  }
+}

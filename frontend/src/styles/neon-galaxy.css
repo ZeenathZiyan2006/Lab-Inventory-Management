@@ -1,0 +1,267 @@
+/* =========================================================================
+   SMVITM NEON GALAXY THEME - UNIFIED SCOPED SYSTEM
+   Applies only to authenticated views under .neon-galaxy-shell.
+   Protects LoginPage and AI Assistant internals from unwanted overrides.
+   ========================================================================= */
+
+.neon-galaxy-shell {
+  background-color: #030712;
+  background-image: 
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(0, 240, 255, 0.12), transparent),
+    radial-gradient(ellipse 70% 50% at 95% 85%, rgba(168, 85, 247, 0.10), transparent),
+    radial-gradient(ellipse 60% 40% at 5% 55%, rgba(236, 72, 153, 0.08), transparent);
+  color: #F8FAFC;
+  min-height: 100vh;
+  position: relative;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Subtle futuristic background circuit and cosmic star pattern */
+.neon-galaxy-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at 50% 30%, black 50%, transparent 95%);
+  z-index: 0;
+}
+
+/* =========================================================================
+   GLOBAL SCOPED TRANSFORMATION FOR ALL AUTHENTICATED PAGES
+   ========================================================================= */
+
+/* All Cards, Panels, and White Containers inside Authenticated Pages */
+.neon-galaxy-shell main .bg-white:not(.assistant-isolated *),
+.neon-galaxy-shell main .card-aesthetic:not(.assistant-isolated *),
+.neon-galaxy-shell .bg-white:not(.assistant-isolated *):not(#login-container *) {
+  background-color: rgba(6, 13, 32, 0.88) !important;
+  border-color: rgba(0, 240, 255, 0.22) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6) !important;
+}
+
+.neon-galaxy-shell main .bg-slate-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-gray-50:not(.assistant-isolated *) {
+  background-color: rgba(8, 18, 44, 0.7) !important;
+  border-color: rgba(0, 240, 255, 0.18) !important;
+  color: #E2E8F0 !important;
+}
+
+.neon-galaxy-shell main .bg-slate-100:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-gray-100:not(.assistant-isolated *) {
+  background-color: rgba(10, 24, 56, 0.8) !important;
+  border-color: rgba(0, 240, 255, 0.22) !important;
+  color: #F1F5F9 !important;
+}
+
+/* Headings and Typography in Authenticated Pages */
+.neon-galaxy-shell main h1:not(.assistant-isolated *),
+.neon-galaxy-shell main h2:not(.assistant-isolated *),
+.neon-galaxy-shell main h3:not(.assistant-isolated *),
+.neon-galaxy-shell main h4:not(.assistant-isolated *),
+.neon-galaxy-shell main h5:not(.assistant-isolated *),
+.neon-galaxy-shell main h6:not(.assistant-isolated *) {
+  color: #FFFFFF !important;
+}
+
+.neon-galaxy-shell main .text-navy-950:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-navy-900:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-navy-800:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-slate-900:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-slate-800:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-gray-900:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-gray-800:not(.assistant-isolated *) {
+  color: #F8FAFC !important;
+}
+
+.neon-galaxy-shell main .text-navy-700:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-navy-600:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-slate-700:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-slate-600:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-gray-700:not(.assistant-isolated *) {
+  color: #CBD5E1 !important;
+}
+
+.neon-galaxy-shell main .text-slate-500:not(.assistant-isolated *),
+.neon-galaxy-shell main .text-slate-400:not(.assistant-isolated *) {
+  color: #94A3B8 !important;
+}
+
+.neon-galaxy-shell main .border-slate-200:not(.assistant-isolated *),
+.neon-galaxy-shell main .border-slate-200\/90:not(.assistant-isolated *),
+.neon-galaxy-shell main .border-slate-300:not(.assistant-isolated *),
+.neon-galaxy-shell main .border-slate-100:not(.assistant-isolated *) {
+  border-color: rgba(0, 240, 255, 0.2) !important;
+}
+
+.neon-galaxy-shell main .divide-slate-200:not(.assistant-isolated *) > * + *,
+.neon-galaxy-shell main .divide-slate-100:not(.assistant-isolated *) > * + * {
+  border-color: rgba(0, 240, 255, 0.15) !important;
+}
+
+/* High-Tech Table Styles across Inventory, Faults, Transfers, Requests, Labs, Audit */
+.neon-galaxy-shell main table:not(.assistant-isolated *) {
+  color: #E2E8F0 !important;
+}
+
+.neon-galaxy-shell main th:not(.assistant-isolated *) {
+  background-color: rgba(8, 20, 50, 0.95) !important;
+  color: #38BDF8 !important;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.05em !important;
+}
+
+.neon-galaxy-shell main td:not(.assistant-isolated *) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #E2E8F0 !important;
+}
+
+.neon-galaxy-shell main tr:hover td:not(.assistant-isolated *) {
+  background-color: rgba(0, 240, 255, 0.06) !important;
+}
+
+/* Inputs, Selects, and Textareas */
+.neon-galaxy-shell main input:not(.assistant-isolated *),
+.neon-galaxy-shell main select:not(.assistant-isolated *),
+.neon-galaxy-shell main textarea:not(.assistant-isolated *) {
+  background-color: rgba(4, 9, 24, 0.95) !important;
+  border: 1px solid rgba(0, 240, 255, 0.3) !important;
+  color: #F8FAFC !important;
+  border-radius: 0.75rem !important;
+}
+
+.neon-galaxy-shell main input:focus:not(.assistant-isolated *),
+.neon-galaxy-shell main select:focus:not(.assistant-isolated *),
+.neon-galaxy-shell main textarea:focus:not(.assistant-isolated *) {
+  border-color: #00F0FF !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.45) !important;
+  outline: none !important;
+}
+
+/* Primary Action Buttons across all pages */
+.neon-galaxy-shell main button.bg-navy-900:not(.assistant-isolated *),
+.neon-galaxy-shell main button.bg-\[\#0B192C\]:not(.assistant-isolated *) {
+  background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%) !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3) !important;
+}
+
+.neon-galaxy-shell main button.bg-navy-900:hover:not(.assistant-isolated *),
+.neon-galaxy-shell main button.bg-\[\#0B192C\]:hover:not(.assistant-isolated *) {
+  background: linear-gradient(135deg, #00F0FF 0%, #3B82F6 100%) !important;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.5) !important;
+}
+
+/* Status Badges */
+.neon-galaxy-shell main .bg-emerald-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-emerald-100:not(.assistant-isolated *) {
+  background-color: rgba(6, 78, 59, 0.45) !important;
+  border: 1px solid rgba(16, 185, 129, 0.6) !important;
+  color: #6EE7B7 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+.neon-galaxy-shell main .bg-rose-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-rose-100:not(.assistant-isolated *) {
+  background-color: rgba(136, 19, 55, 0.45) !important;
+  border: 1px solid rgba(244, 63, 94, 0.6) !important;
+  color: #FDA4AF !important;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.3) !important;
+}
+
+.neon-galaxy-shell main .bg-amber-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-amber-100:not(.assistant-isolated *) {
+  background-color: rgba(120, 53, 15, 0.45) !important;
+  border: 1px solid rgba(245, 158, 11, 0.6) !important;
+  color: #FCD34D !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+.neon-galaxy-shell main .bg-blue-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-blue-100:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-cyan-50:not(.assistant-isolated *) {
+  background-color: rgba(30, 58, 138, 0.45) !important;
+  border: 1px solid rgba(59, 130, 246, 0.6) !important;
+  color: #93C5FD !important;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3) !important;
+}
+
+.neon-galaxy-shell main .bg-purple-50:not(.assistant-isolated *),
+.neon-galaxy-shell main .bg-purple-100:not(.assistant-isolated *) {
+  background-color: rgba(88, 28, 135, 0.45) !important;
+  border: 1px solid rgba(168, 85, 247, 0.6) !important;
+  color: #D8B4FE !important;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Modals & Dialogs throughout the Application */
+.neon-galaxy-shell .fixed .bg-white:not(.assistant-isolated *),
+body > .fixed .bg-white:not(.assistant-isolated *),
+.neon-galaxy-shell .fixed.inset-0 .bg-white:not(.assistant-isolated *) {
+  background-color: #061026 !important;
+  border: 1px solid rgba(0, 240, 255, 0.35) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
+}
+
+.neon-galaxy-shell .fixed .bg-slate-100:not(.assistant-isolated *),
+.neon-galaxy-shell .fixed .bg-slate-50:not(.assistant-isolated *),
+body > .fixed .bg-slate-100:not(.assistant-isolated *),
+body > .fixed .bg-slate-50:not(.assistant-isolated *) {
+  background-color: #04091A !important;
+  border-color: rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Modal Viewport Fit and Safe Overflow */
+.neon-galaxy-shell .fixed.inset-0 > div,
+body > .fixed.inset-0 > div {
+  max-height: 92dvh !important;
+  margin: auto !important;
+}
+
+/* Utility to completely hide ugly native scrollbar arrows while allowing smooth scrolling */
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Custom glowing scrollbars inside neon galaxy shell */
+.neon-galaxy-shell ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.neon-galaxy-shell ::-webkit-scrollbar-track {
+  background: rgba(4, 9, 22, 0.8);
+}
+
+.neon-galaxy-shell ::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.35);
+  border-radius: 4px;
+}
+
+.neon-galaxy-shell ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.7);
+  box-shadow: 0 0 10px #00F0FF;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .neon-galaxy-shell * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
