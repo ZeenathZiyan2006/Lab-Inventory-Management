@@ -19,9 +19,10 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { UsersPage } from './pages/UsersPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
+import { LogoutThankYouScreen } from './components/LogoutThankYouScreen';
 
 export const App: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isLoggedOut, resetLogout } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [initialScanToken, setInitialScanToken] = useState<string>('');
@@ -48,6 +49,16 @@ export const App: React.FC = () => {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // If user has just logged out, present the friendly AI Robot Logout Thank You Screen
+  if (isLoggedOut) {
+    return (
+      <LogoutThankYouScreen
+        onGoToLogin={() => resetLogout()}
+        countdownSeconds={60}
+      />
     );
   }
 

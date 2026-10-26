@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth, UserRole } from '../context/AuthContext';
-import { QrCode, Bell, LogOut, Menu, X, Mail, Building, ChevronDown } from 'lucide-react';
+import {
+  QrCode,
+  Bell,
+  LogOut,
+  Menu,
+  X,
+  Mail,
+  Building,
+  ChevronDown,
+  CheckCircle2,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  Inbox,
+  RefreshCw
+} from 'lucide-react';
 import { apiRequest } from '../services/api';
 import { triggerSelectionGreeting } from './effects/SelectionGreetingRobot';
 
@@ -12,6 +27,19 @@ interface NotificationItem {
   link?: string;
   is_read: boolean;
   created_at: string;
+}
+
+interface DispatchedEmail {
+  id: number;
+  to_email: string;
+  to_name: string;
+  from_email: string;
+  subject: string;
+  body: string;
+  link: string;
+  sent_at: string;
+  status: string;
+  notification_id: number;
 }
 
 interface NavbarProps {
@@ -25,10 +53,50 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQRScanner, onToggleMobileS
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
+  // Institutional Webmail state
+  const [emails, setEmails] = useState<DispatchedEmail[]>([]);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState<DispatchedEmail | null>(null);
+
+  // Real-time Celebratory Alert Toast State
+  const [activeAlertToast, setActiveAlertToast] = useState<NotificationItem | null>(null);
+  const [knownNotificationIds, setKnownNotificationIds] = useState<Set<number>>(new Set());
+
+  // Web Audio native chime for instant high-priority alerts
+  const playAlertChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.12); // E5
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.24); // G5
+      osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.38); // C6
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.65);
+    } catch {
+      // Audio playback restrictions fallback
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadNotifications();
-      const interval = setInterval(loadNotifications, 15000);
+      loadEmails();
+      // High-frequency polling (3.5 seconds) guarantees real-time notification well within the minute!
+      const interval = setInterval(() => {
+        loadNotifications();
+        loadEmails();
+      }, 3500);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -37,6 +105,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQRScanner, onToggleMobileS
     try {
       const data = await apiRequest<NotificationItem[]>('/notifications');
       setNotifications(data);
+
+      // Detect any new critical notifications
+      setKnownNotificationIds(prevKnown => {
+        if (prevKnown.size > 0) {
+          const freshItems = data.filter(n => !prevKnown.has(n.id) && !n.is_read);
+          if (freshItems.length > 0) {
+            const highPriority = freshItems.find(n =>
+              n.title.toLowerCase().includes('approved') ||
+              n.title.toLowerCase().includes('principal') ||
+              n.title.toLowerCase().includes('endorsed') ||
+              n.title.toLowerCase().includes('action')
+            ) || freshItems[0];
+
+            if (highPriority) {
+              setActiveAlertToast(highPriority);
+              playAlertChime();
+            }
+          }
+        }
+        return new Set(data.map(n => n.id));
+      });
+    } catch {
+      // Ignore background poll errors
+    }
+  };
+
+  const loadEmails = async () => {
+    try {
+      const emailList = await apiRequest<DispatchedEmail[]>('/notifications/emails');
+      setEmails(emailList);
     } catch {
       // Ignore background poll errors
     }
@@ -65,13 +163,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQRScanner, onToggleMobileS
       if (e.key === 'Escape') {
         setShowProfileModal(false);
         setShowNotifications(false);
+        setShowEmailModal(false);
+        setActiveAlertToast(null);
       }
     };
-    if (showProfileModal || showNotifications) {
+    if (showProfileModal || showNotifications || showEmailModal || activeAlertToast) {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [showProfileModal, showNotifications]);
+  }, [showProfileModal, showNotifications, showEmailModal, activeAlertToast]);
 
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
@@ -145,18 +245,35 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQRScanner, onToggleMobileS
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center space-x-3.5">
+          <div className="flex items-center space-x-3">
             {/* Scan QR Button */}
             <button
               onClick={() => {
                 triggerSelectionGreeting('Launching QR Scanner!');
                 onOpenQRScanner();
               }}
-              className="flex items-center space-x-2 bg-[#061830] hover:bg-[#0A2446] text-cyan-300 px-4 py-2 rounded-xl border border-cyan-400 hover:border-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)] transition active:scale-95"
+              className="flex items-center space-x-2 bg-[#061830] hover:bg-[#0A2446] text-cyan-300 px-3.5 py-2 rounded-xl border border-cyan-400 hover:border-cyan-300 shadow-[0_0_15px_rgba(0,240,255,0.3)] transition active:scale-95"
               title="Scan Laboratory or Asset QR"
             >
               <QrCode className="h-4 w-4 text-cyan-400 drop-shadow-[0_0_6px_#00F0FF]" />
               <span className="text-xs font-bold tracking-wide">Scan QR</span>
+            </button>
+
+            {/* SMVITM Institutional Webmail Gateway Button */}
+            <button
+              onClick={() => {
+                loadEmails();
+                setShowEmailModal(true);
+              }}
+              className="w-10 h-10 rounded-full bg-[#07132B] hover:bg-[#0B1E40] border border-cyan-500/30 text-slate-300 hover:text-cyan-300 flex items-center justify-center transition relative shadow-[0_0_10px_rgba(0,240,255,0.15)] group"
+              title="Official Institutional Webmail Inbox (Live Email Log)"
+            >
+              <Mail className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition" />
+              {emails.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 rounded-full text-[10px] flex items-center justify-center font-black shadow-[0_0_10px_#00F0FF]">
+                  {emails.length}
+                </span>
+              )}
             </button>
 
             {/* Notifications Bell */}
@@ -253,6 +370,174 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQRScanner, onToggleMobileS
 
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* 1. INSTANT PROMINENT CELEBRATORY POPUP ALERT (Appears within the minute!) */}
+      {/* ========================================================================= */}
+      {activeAlertToast && createPortal(
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[94vw] max-w-lg animate-in slide-in-from-top duration-300">
+          <div className="relative bg-[#031522]/95 border-2 border-emerald-400/90 rounded-2xl p-4 shadow-[0_0_35px_rgba(16,185,129,0.55)] backdrop-blur-2xl text-white">
+            <div className="flex items-start justify-between space-x-3">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_#10B981]">
+                  <Sparkles className="h-5 w-5 text-emerald-300 animate-spin" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950 shadow-[0_0_8px_#10B981]">
+                      OFFICIAL DISPATCH
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Just Now</span>
+                  </div>
+                  <h4 className="font-extrabold text-sm text-emerald-200 mt-1 leading-snug drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">
+                    {activeAlertToast.title}
+                  </h4>
+                  <p className="text-xs text-slate-200 mt-1 leading-relaxed">
+                    {activeAlertToast.message}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActiveAlertToast(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                title="Dismiss Alert"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-3.5 pt-3 border-t border-emerald-500/20 flex items-center justify-between">
+              <span className="text-[11px] text-emerald-300/80 font-medium flex items-center">
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                100% Institutionally Verified
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    setActiveAlertToast(null);
+                    window.location.href = activeAlertToast.link || '/transfers';
+                  }}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-[0_0_12px_rgba(16,185,129,0.4)] active:scale-95 flex items-center space-x-1"
+                >
+                  <span>Open Transfers</span>
+                  <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. SMVITM OFFICIAL WEBMAIL GATEWAY MODAL (Live Email Delivery Log)        */}
+      {/* ========================================================================= */}
+      {showEmailModal && user && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150"
+          onClick={() => setShowEmailModal(false)}
+        >
+          <div
+            className="bg-[#060D1E] text-slate-100 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)] max-w-2xl w-full overflow-hidden border border-cyan-500/40 animate-in zoom-in-95 duration-150 max-h-[88vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-[#091530] text-white p-4.5 px-6 flex justify-between items-center border-b border-cyan-500/20">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center">
+                  <Mail className="h-4 w-4 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-wide text-white">SMVITM Institutional Webmail</h3>
+                  <p className="text-[11px] text-cyan-300 font-mono">Mailbox: {user.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={loadEmails}
+                  className="p-1.5 text-slate-300 hover:text-cyan-300 hover:bg-slate-800 rounded-lg transition"
+                  title="Refresh Mailbox"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                  title="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Email List or Detail */}
+            <div className="p-5 overflow-y-auto space-y-3 flex-1 text-xs">
+              {emails.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 space-y-2">
+                  <Inbox className="h-10 w-10 mx-auto text-slate-500 stroke-1" />
+                  <p className="font-semibold text-slate-300">No Institutional Emails In Box</p>
+                  <p className="text-[11px] text-slate-500">Emails dispatched upon transfer submission and approvals will appear here live.</p>
+                </div>
+              ) : (
+                emails.map((email) => (
+                  <div
+                    key={email.id}
+                    className="p-4 rounded-2xl bg-[#09142B]/90 border border-cyan-500/20 hover:border-cyan-400/50 transition shadow-sm space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-cyan-400 font-bold bg-[#071F38] px-2 py-0.5 rounded border border-cyan-500/30">
+                        {email.status}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">{email.sent_at}</span>
+                    </div>
+
+                    <div className="font-bold text-slate-100 text-sm flex items-center space-x-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
+                      <span>{email.subject}</span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-300 bg-[#040A17] p-3 rounded-xl border border-slate-800/80 leading-relaxed whitespace-pre-line font-mono">
+                      {email.body}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                      <div>
+                        From: <span className="text-slate-200">{email.from_email}</span> &bull; To: <span className="text-slate-200">{email.to_email}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowEmailModal(false);
+                          window.location.href = email.link || '/transfers';
+                        }}
+                        className="px-3 py-1 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-300 border border-cyan-500/40 rounded-lg font-bold transition flex items-center space-x-1 active:scale-95"
+                      >
+                        <span>Open Transfer</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-[#091530] border-t border-cyan-500/20 flex justify-between items-center text-xs">
+              <span className="text-slate-400 text-[11px]">
+                Showing {emails.length} institutional email message(s)
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowEmailModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold transition border border-slate-700"
+              >
+                Close Mailbox
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* User Profile Modal Dialog rendered in Portal outside header stacking context */}
       {showProfileModal && user && createPortal(

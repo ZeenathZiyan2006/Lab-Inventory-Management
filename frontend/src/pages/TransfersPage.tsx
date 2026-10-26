@@ -174,6 +174,7 @@ export const TransfersPage: React.FC = () => {
   const [priority, setPriority] = useState('Normal');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
+  const [requiresPrincipalApproval, setRequiresPrincipalApproval] = useState(true);
   const [isDraft, setIsDraft] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -198,6 +199,11 @@ export const TransfersPage: React.FC = () => {
   useEffect(() => {
     loadLabs();
     loadTransfers();
+    // Fast background sync so approval notifications and status updates reflect within seconds
+    const interval = setInterval(() => {
+      loadTransfers(true);
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -219,15 +225,15 @@ export const TransfersPage: React.FC = () => {
     }
   };
 
-  const loadTransfers = async () => {
-    setLoading(true);
+  const loadTransfers = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const data = await apiRequest<TransferItem[]>('/transfers');
       setTransfers(data);
     } catch (err) {
-      console.error(err);
+      if (!silent) console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -288,6 +294,7 @@ export const TransfersPage: React.FC = () => {
           reason: reason.trim(),
           priority,
           notes: notes.trim() || undefined,
+          requires_principal_approval: requiresPrincipalApproval,
           is_draft: isDraft
         })
       });
@@ -295,6 +302,7 @@ export const TransfersPage: React.FC = () => {
       setShowRequestModal(false);
       setReason('');
       setNotes('');
+      setRequiresPrincipalApproval(true);
       setIsDraft(false);
       loadTransfers();
     } catch (err: any) {
@@ -611,8 +619,17 @@ export const TransfersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredTransfers.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                {filteredTransfers.map((item) => {
+                  const isOfficiallyApproved = item.status === 'Approved' && item.principal_approval_status === 'Approved';
+                  return (
+                  <tr 
+                    key={item.id} 
+                    className={`transition ${
+                      isOfficiallyApproved 
+                        ? 'bg-emerald-50/60 hover:bg-emerald-50/80 border-l-4 border-l-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
+                        : 'hover:bg-slate-50/80'
+                    }`}
+                  >
                     <td className="py-3.5 px-4 font-mono font-bold text-navy-900">
                       {item.request_number}
                       <div className="text-[10px] text-slate-400 font-sans mt-0.5">
@@ -660,6 +677,24 @@ export const TransfersPage: React.FC = () => {
 
                     <td className="py-3.5 px-4">
                       <div>{getStatusBadge(item.status)}</div>
+                      <div className="flex flex-col gap-1 mt-1.5">
+                        <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                          item.hod_approval_status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          item.hod_approval_status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                          'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>
+                          HOD: {item.hod_approval_status}
+                        </span>
+                        {item.requires_principal_approval && (
+                          <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            item.principal_approval_status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-[0_0_6px_rgba(16,185,129,0.3)]' :
+                            item.principal_approval_status === 'Rejected' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                            'bg-purple-50 text-purple-700 border border-purple-200'
+                          }`}>
+                            Principal: {item.principal_approval_status}
+                          </span>
+                        )}
+                      </div>
                       {item.receipt_condition && (
                         <div className="text-[10px] text-slate-500 mt-1">
                           Condition: <strong>{item.receipt_condition}</strong>
@@ -694,10 +729,16 @@ export const TransfersPage: React.FC = () => {
                             setApprovalRejectionReason('');
                             setApprovalError(null);
                           }}
-                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-[11px] font-semibold transition"
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shadow-xs ${
+                            isPrincipal 
+                              ? 'bg-gradient-to-r from-purple-700 to-indigo-700 text-white hover:from-purple-800 hover:to-indigo-800 ring-1 ring-purple-400/40' 
+                              : isHOD
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : 'bg-slate-700 hover:bg-slate-800 text-white'
+                          }`}
                         >
                           <ShieldCheck className="h-3 w-3 inline mr-1" />
-                          Review
+                          {isPrincipal ? 'Executive Review' : 'HOD Review'}
                         </button>
                       )}
 
@@ -741,7 +782,8 @@ export const TransfersPage: React.FC = () => {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -911,6 +953,21 @@ export const TransfersPage: React.FC = () => {
                   placeholder="Special handling instructions, temporary loan period, etc."
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl"
                 />
+              </div>
+
+              <div className="bg-cyan-50/80 border border-cyan-200 rounded-xl p-3 flex items-start space-x-2.5">
+                <ShieldCheck className="h-4 w-4 text-cyan-700 flex-shrink-0 mt-0.5" />
+                <label className="flex items-center space-x-2 cursor-pointer text-slate-800 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={requiresPrincipalApproval}
+                    onChange={(e) => setRequiresPrincipalApproval(e.target.checked)}
+                    className="rounded text-cyan-600 focus:ring-cyan-500 h-4 w-4"
+                  />
+                  <span>
+                    <strong>Requires Principal Executive Sanction</strong> (Multi-tier: HOD Tejaswini H endorsement &rarr; Principal Dr. Nagaraj Bhat approval with real-time email dispatch)
+                  </span>
+                </label>
               </div>
 
               <div className="pt-2 flex justify-between items-center border-t border-slate-200">
@@ -1108,16 +1165,28 @@ export const TransfersPage: React.FC = () => {
       {/* ======================================================== */}
       {showApprovalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
-              <h3 className="font-semibold text-sm">Review Transfer: {showApprovalModal.request_number}</h3>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+            <div className={`p-4 flex justify-between items-center text-white ${
+              isPrincipal ? 'bg-gradient-to-r from-[#170C3A] via-[#241457] to-[#120B30] border-b border-purple-500/30' : 'bg-navy-900'
+            }`}>
+              <div>
+                <h3 className="font-bold text-sm flex items-center space-x-1.5">
+                  <ShieldCheck className={`h-4 w-4 ${isPrincipal ? 'text-purple-400' : 'text-cyan-400'}`} />
+                  <span>
+                    {isPrincipal ? 'Principal Executive Sanction Desk' : 'Departmental HOD Review Desk'}
+                  </span>
+                </h3>
+                <p className="text-[10px] text-slate-300 font-mono mt-0.5">
+                  Transfer Request: {showApprovalModal.request_number}
+                </p>
+              </div>
               <button onClick={() => setShowApprovalModal(null)} className="text-slate-400 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="p-6 space-y-4 text-xs">
               {approvalError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl font-medium">
                   {approvalError}
                 </div>
               )}
@@ -1129,9 +1198,85 @@ export const TransfersPage: React.FC = () => {
                 </div>
               )}
 
-              <p className="text-slate-600">
-                Relocation of equipment between <strong>{showApprovalModal.source_lab_name}</strong> and <strong>{showApprovalModal.destination_lab_name}</strong> requires your departmental approval.
-              </p>
+              {/* Transfer Details Card */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-slate-700">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Equipment:</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {showApprovalModal.asset_custom_id ? `${showApprovalModal.asset_name} (${showApprovalModal.asset_custom_id})` : `${showApprovalModal.bulk_item_name} (Qty: ${showApprovalModal.quantity})`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Route:</span>
+                  <span className="font-semibold text-slate-800">
+                    {showApprovalModal.source_lab_name} &rarr; {showApprovalModal.destination_lab_name}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Requester:</span>
+                  <span className="font-medium text-slate-800">
+                    {showApprovalModal.requested_by_name || `User #${showApprovalModal.requested_by_id}`} (Lab Instructor)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Justification:</span>
+                  <span className="text-slate-800 italic">"{showApprovalModal.reason}"</span>
+                </div>
+              </div>
+
+              {/* Two-Tier Institutional Status Banner */}
+              {showApprovalModal.requires_principal_approval && (
+                <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-indigo-200/80 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 text-[11px]">Multi-Tier Institutional Workflow:</span>
+                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-2 py-0.5 rounded-full">
+                      {showApprovalModal.hod_approval_status === 'Approved' ? 'Stage 2 of 2: Executive Approval' : 'Stage 1 of 2: HOD Endorsement'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className={`p-2 rounded-lg border ${
+                      showApprovalModal.hod_approval_status === 'Approved' 
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-medium' 
+                        : showApprovalModal.hod_approval_status === 'Rejected'
+                        ? 'bg-rose-50 text-rose-800 border-rose-300'
+                        : 'bg-amber-50 text-amber-800 border-amber-300'
+                    }`}>
+                      <div className="font-bold">1. HOD Endorsement</div>
+                      <div className="text-[10px] mt-0.5">{showApprovalModal.hod_approval_status}</div>
+                      {showApprovalModal.hod_remarks && (
+                        <div className="text-[10px] text-emerald-700 italic mt-0.5 truncate">
+                          "{showApprovalModal.hod_remarks}"
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`p-2 rounded-lg border ${
+                      showApprovalModal.principal_approval_status === 'Approved'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-medium'
+                        : showApprovalModal.principal_approval_status === 'Rejected'
+                        ? 'bg-rose-50 text-rose-800 border-rose-300'
+                        : 'bg-purple-50 text-purple-800 border-purple-300'
+                    }`}>
+                      <div className="font-bold">2. Principal Sanction</div>
+                      <div className="text-[10px] mt-0.5">{showApprovalModal.principal_approval_status}</div>
+                    </div>
+                  </div>
+
+                  {isPrincipal && showApprovalModal.requires_hod_approval && showApprovalModal.hod_approval_status !== 'Approved' && (
+                    <div className="text-[11px] text-amber-800 bg-amber-100/70 p-2 rounded-lg border border-amber-300">
+                      ⚠️ <strong>Security Notice:</strong> Department HOD endorsement is required before Principal executive sanction can be granted.
+                    </div>
+                  )}
+
+                  {isPrincipal && showApprovalModal.hod_approval_status === 'Approved' && (
+                    <div className="text-[11px] text-emerald-800 bg-emerald-100/70 p-2 rounded-lg border border-emerald-300 flex items-center space-x-1.5">
+                      <CheckCircle className="h-4 w-4 text-emerald-700 flex-shrink-0" />
+                      <span>Endorsed by HOD Tejaswini H. Ready for Principal Dr. Nagaraj Bhat official sanction.</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-2">Review Decision</label>
@@ -1144,7 +1289,9 @@ export const TransfersPage: React.FC = () => {
                       onChange={() => setApprovalDecision('Approved')}
                       className="text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="font-semibold text-emerald-800">Approve Transfer</span>
+                    <span className="font-semibold text-emerald-800">
+                      {isPrincipal ? 'Grant Executive Sanction' : 'Approve Transfer'}
+                    </span>
                   </label>
                   <label className="flex items-center space-x-1.5 cursor-pointer">
                     <input
@@ -1166,9 +1313,14 @@ export const TransfersPage: React.FC = () => {
                     rows={2}
                     value={approvalRemarks}
                     onChange={(e) => setApprovalRemarks(e.target.value)}
-                    placeholder="e.g. Sanctioned for practical exams..."
+                    placeholder={isPrincipal ? "e.g. Sanctioned by Principal Dr. Nagaraj Bhat for AI & DS academic laboratory..." : "e.g. Endorsed by HOD Tejaswini H..."}
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {isPrincipal 
+                      ? '⚡ Approving will immediately dispatch an institutional email and celebratory alert popup to Lab Instructor Chitrakala.' 
+                      : '⚡ Approving will dispatch an official notification and email to Principal Dr. Nagaraj Bhat for executive sanction.'}
+                  </p>
                 </div>
               ) : (
                 <div>
@@ -1184,7 +1336,7 @@ export const TransfersPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="pt-2 flex justify-end space-x-2">
+              <div className="pt-2 flex justify-end space-x-2 border-t border-slate-200">
                 <button
                   onClick={() => setShowApprovalModal(null)}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium"
@@ -1195,10 +1347,18 @@ export const TransfersPage: React.FC = () => {
                   onClick={handleApprovalSubmit}
                   disabled={user?.id === showApprovalModal.requested_by_id && !isAdmin}
                   className={`px-4 py-2 text-white rounded-xl font-semibold transition ${
-                    approvalDecision === 'Approved' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-rose-600 hover:bg-rose-700'
+                    approvalDecision === 'Approved'
+                      ? isPrincipal
+                        ? 'bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 shadow-[0_0_12px_rgba(147,51,234,0.3)]'
+                        : 'bg-emerald-700 hover:bg-emerald-800'
+                      : 'bg-rose-600 hover:bg-rose-700'
                   } disabled:opacity-50`}
                 >
-                  Submit Decision
+                  {approvalDecision === 'Approved'
+                    ? isPrincipal
+                      ? 'Grant Official Sanction'
+                      : 'Endorse & Forward'
+                    : 'Submit Rejection'}
                 </button>
               </div>
             </div>

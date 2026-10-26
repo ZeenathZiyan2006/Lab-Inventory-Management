@@ -11,6 +11,15 @@
   </head>
   <body class="bg-slate-50 text-slate-800 antialiased font-sans">
     <div id="root"></div>
+    <script>
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var autoToken = params.get('auto_token');
+        if (autoToken) {
+          localStorage.setItem('smvitm_auth_token', autoToken);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

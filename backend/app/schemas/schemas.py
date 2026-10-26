@@ -491,6 +491,7 @@ class TransferRequestCreate(BaseModel):
     priority: Optional[str] = "Normal"
     notes: Optional[str] = None
     is_draft: Optional[bool] = False
+    requires_principal_approval: Optional[bool] = True
 
 class TransferApproval(BaseModel):
     status: str  # Approved, Rejected, More Info Requested

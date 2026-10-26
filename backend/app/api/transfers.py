@@ -336,6 +336,8 @@ def request_transfer(
     initial_status = TransferStatus.DRAFT if payload.is_draft else TransferStatus.PENDING_APPROVAL
     req_number = f"TRF-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:4].upper()}"
 
+    req_principal = payload.requires_principal_approval if payload.requires_principal_approval is not None else True
+
     transfer = TransferRequest(
         request_number=req_number,
         source_lab_id=payload.source_lab_id,
@@ -349,7 +351,9 @@ def request_transfer(
         notes=payload.notes.strip() if payload.notes else None,
         status=initial_status,
         requires_hod_approval=True,
-        requires_principal_approval=False
+        hod_approval_status="Pending",
+        requires_principal_approval=req_principal,
+        principal_approval_status="Pending" if req_principal else "Not Required"
     )
     db.add(transfer)
     db.flush()
@@ -363,10 +367,13 @@ def request_transfer(
     )
 
     if not payload.is_draft:
+        item_label = transfer.asset.name if transfer.asset else (transfer.bulk_item.name if transfer.bulk_item else "Equipment")
+        src_label = transfer.source_lab.name if transfer.source_lab else f"Lab {transfer.source_lab_id}"
+        dest_label = transfer.destination_lab.name if transfer.destination_lab else f"Lab {transfer.destination_lab_id}"
         create_notification(
             db,
             title="Inter-Lab Transfer Awaiting Approval",
-            message=f"Transfer request {transfer.request_number} submitted by {current_user.full_name} for review.",
+            message=f"Transfer request {transfer.request_number} for '{item_label}' ({src_label} → {dest_label}) submitted by {current_user.full_name} for review.",
             role=UserRole.HOD,
             link="/transfers"
         )
@@ -450,36 +457,102 @@ def approve_or_reject_transfer(
     )
     db.add(approval_decision)
 
+    item_label = transfer.asset.name if transfer.asset else (transfer.bulk_item.name if transfer.bulk_item else "Equipment")
+    src_label = transfer.source_lab.name if transfer.source_lab else f"Lab {transfer.source_lab_id}"
+    dest_label = transfer.destination_lab.name if transfer.destination_lab else f"Lab {transfer.destination_lab_id}"
+
     if payload.decision.lower() == "approved":
         if current_user.role == UserRole.HOD:
             transfer.hod_approval_status = "Approved"
             transfer.hod_approved_by_id = current_user.id
             transfer.hod_remarks = payload.comments
 
-        transfer.status = TransferStatus.APPROVED
-        _log_transfer_history(
-            db, transfer, current_user,
-            action=f"Approved by {current_user.role.value}",
-            prev_status=prev_status,
-            new_status=TransferStatus.APPROVED.value,
-            reason=payload.comments
-        )
+            if transfer.requires_principal_approval:
+                transfer.status = TransferStatus.AWAITING_APPROVAL
+                _log_transfer_history(
+                    db, transfer, current_user,
+                    action="Approved by HOD Tejaswini H - Forwarded to Principal for Executive Sanction",
+                    prev_status=prev_status,
+                    new_status=TransferStatus.AWAITING_APPROVAL.value,
+                    reason=payload.comments
+                )
+                # Dispatch real-time notification & institutional email to Principal Dr. Nagaraj Bhat
+                create_notification(
+                    db,
+                    title="Institutional Action: Equipment Transfer Endorsed by HOD",
+                    message=f"HOD Tejaswini H has formally approved Inter-Lab Transfer Request {transfer.request_number} for '{item_label}' (From: {src_label} → To: {dest_label}). Executive sanction from Principal Dr. Nagaraj Bhat is required to authorize equipment movement.",
+                    role=UserRole.PRINCIPAL,
+                    link="/transfers"
+                )
+                # Dispatch notification & email to Lab Instructor Chitrakala
+                create_notification(
+                    db,
+                    title=f"Transfer {transfer.request_number} Endorsed by HOD",
+                    message=f"HOD Tejaswini H has approved your transfer request {transfer.request_number}. It is now forwarded to Principal Dr. Nagaraj Bhat for final executive sanction.",
+                    user_id=transfer.requested_by_id,
+                    link="/transfers"
+                )
+            else:
+                transfer.status = TransferStatus.APPROVED
+                _log_transfer_history(
+                    db, transfer, current_user,
+                    action=f"Approved by {current_user.role.value}",
+                    prev_status=prev_status,
+                    new_status=TransferStatus.APPROVED.value,
+                    reason=payload.comments
+                )
+                create_notification(
+                    db,
+                    title="Transfer Request Approved",
+                    message=f"Transfer {transfer.request_number} was approved by {current_user.full_name}. Equipment is ready for dispatch.",
+                    user_id=transfer.requested_by_id,
+                    link="/transfers"
+                )
+                create_notification(
+                    db,
+                    title="Action Required: Dispatch Transfer Equipment",
+                    message=f"Transfer {transfer.request_number} approved. Please dispatch from {src_label}.",
+                    role=UserRole.LAB_INSTRUCTOR,
+                    link="/transfers"
+                )
 
-        create_notification(
-            db,
-            title="Transfer Request Approved",
-            message=f"Transfer {transfer.request_number} was approved by {current_user.full_name}. Equipment is ready for dispatch.",
-            user_id=transfer.requested_by_id,
-            link="/transfers"
-        )
-        # Also notify source lab instructors to dispatch
-        create_notification(
-            db,
-            title="Action Required: Dispatch Transfer Equipment",
-            message=f"Transfer {transfer.request_number} approved. Please dispatch from Lab {transfer.source_lab_id}.",
-            role=UserRole.LAB_INSTRUCTOR,
-            link="/transfers"
-        )
+        elif current_user.role in [UserRole.PRINCIPAL, UserRole.ADMIN]:
+            # Enforce prerequisite check: HOD approval required if flagged
+            if transfer.requires_hod_approval and transfer.hod_approval_status != "Approved" and current_user.role != UserRole.ADMIN:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Department HOD endorsement is strictly required before Principal executive sanction can be granted."
+                )
+
+            transfer.principal_approval_status = "Approved"
+            transfer.principal_approved_by_id = current_user.id
+            transfer.principal_remarks = payload.comments
+            transfer.status = TransferStatus.APPROVED
+
+            _log_transfer_history(
+                db, transfer, current_user,
+                action=f"Officially Sanctioned by {current_user.full_name} ({current_user.role.value})",
+                prev_status=prev_status,
+                new_status=TransferStatus.APPROVED.value,
+                reason=payload.comments
+            )
+
+            # Instant Celebratory Notification & Institutional Email to Lab Instructor Chitrakala
+            create_notification(
+                db,
+                title="🎉 TRANSFER APPROVED: Principal Executive Sanction Granted!",
+                message=f"Principal Dr. Nagaraj Bhat has officially sanctioned Transfer Request {transfer.request_number} for '{item_label}' (From: {src_label} → To: {dest_label}). Equipment movement is officially cleared and ready for immediate dispatch.",
+                user_id=transfer.requested_by_id,
+                link="/transfers"
+            )
+            # Also notify lab instructors that item is ready for physical transit
+            create_notification(
+                db,
+                title="Action Required: Dispatch Transfer Equipment",
+                message=f"Transfer {transfer.request_number} officially sanctioned by Principal Dr. Nagaraj Bhat. Please dispatch equipment from {src_label} to {dest_label}.",
+                role=UserRole.LAB_INSTRUCTOR,
+                link="/transfers"
+            )
 
     elif payload.decision.lower() == "rejected":
         if not payload.rejection_reason or len(payload.rejection_reason.strip()) < 5:
@@ -492,10 +565,14 @@ def approve_or_reject_transfer(
             transfer.hod_approval_status = "Rejected"
             transfer.hod_approved_by_id = current_user.id
             transfer.hod_remarks = payload.rejection_reason
+        elif current_user.role in [UserRole.PRINCIPAL, UserRole.ADMIN]:
+            transfer.principal_approval_status = "Rejected"
+            transfer.principal_approved_by_id = current_user.id
+            transfer.principal_remarks = payload.rejection_reason
 
         _log_transfer_history(
             db, transfer, current_user,
-            action=f"Rejected by {current_user.role.value}",
+            action=f"Rejected by {current_user.full_name} ({current_user.role.value})",
             prev_status=prev_status,
             new_status=TransferStatus.REJECTED.value,
             reason=payload.rejection_reason
@@ -503,7 +580,7 @@ def approve_or_reject_transfer(
 
         create_notification(
             db,
-            title="Transfer Request Rejected",
+            title=f"Transfer Request Rejected by {current_user.role.value}",
             message=f"Transfer {transfer.request_number} was rejected by {current_user.full_name}. Reason: {payload.rejection_reason}",
             user_id=transfer.requested_by_id,
             link="/transfers"

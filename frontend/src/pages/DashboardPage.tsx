@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../services/api';
 import {
@@ -15,9 +15,7 @@ import {
   Bot,
   Zap,
   FlaskConical,
-  Cpu,
-  Send,
-  Sparkles
+  Cpu
 } from 'lucide-react';
 import { PageId } from '../components/Sidebar';
 import { AIRobotAssistant } from '../components/AIRobotAssistant';
@@ -50,37 +48,15 @@ interface DashboardPageProps {
   onOpenQRScanner: () => void;
 }
 
-interface ChatMessage {
-  id: string;
-  sender: 'assistant' | 'user';
-  text: string;
-}
-
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpenQRScanner }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [robotAssistantOpen, setRobotAssistantOpen] = useState(false);
 
-  // In-page AI Assistant panel state
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      text: "Hello! I'm your AI assistant.\nI can help you with:\n• Asset Information\n• Fault analysis\n• Inventory insights\n• Reports and more!"
-    }
-  ]);
-  const chatBottomRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     loadStats();
   }, []);
-
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
 
   const loadStats = async () => {
     try {
@@ -91,49 +67,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
       console.error('Failed to load dashboard metrics:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSendAiQuestion = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const query = aiQuestion.trim();
-    if (!query || aiLoading) return;
-
-    const userMsg: ChatMessage = {
-      id: String(Date.now()),
-      sender: 'user',
-      text: query
-    };
-
-    setChatMessages(prev => [...prev, userMsg]);
-    setAiQuestion('');
-    setAiLoading(true);
-
-    try {
-      const response = await apiRequest<{ response: string }>('/ai/query', {
-        method: 'POST',
-        body: JSON.stringify({ query })
-      });
-      const replyText = response?.response || 'I have analyzed the database records for your request.';
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: String(Date.now() + 1),
-          sender: 'assistant',
-          text: replyText
-        }
-      ]);
-    } catch {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: String(Date.now() + 1),
-          sender: 'assistant',
-          text: `Here is the current laboratory status: ${stats?.total_assets || 11} total tracked assets with ${stats?.assets_working || 8} verified working and ${stats?.open_faults || 2} under diagnosis.`
-        }
-      ]);
-    } finally {
-      setAiLoading(false);
     }
   };
 
@@ -149,16 +82,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
   }
 
   return (
-    <div className="w-full flex flex-col xl:flex-row gap-5 pb-6">
+    <div className="w-full space-y-5 pb-6">
       
       {/* ========================================================================= */}
-      {/* LEFT & CENTER MAIN DASHBOARD VIEW                                         */}
+      {/* CAMPUS HERO BANNER WITH AUTHENTIC NIGHT CAMPUS PHOTO                      */}
       {/* ========================================================================= */}
-      <div className="flex-1 space-y-5 min-w-0">
-        
-        {/* ========================================================================= */}
-        {/* CAMPUS HERO BANNER WITH AUTHENTIC NIGHT CAMPUS PHOTO                      */}
-        {/* ========================================================================= */}
         <div className="relative rounded-3xl overflow-hidden border border-cyan-500/35 bg-[#050C1F] shadow-[0_12px_40px_rgba(0,0,0,0.7)] min-h-[220px]">
           
           {/* Right-aligned illuminated night campus photo */}
@@ -183,25 +111,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
             <circle cx="280" cy="40" r="3" fill="#00F0FF" />
           </svg>
 
-          <div className="relative z-10 p-6 sm:p-7 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 min-h-[220px]">
-            {/* Left Titles */}
-            <div className="space-y-1 max-w-xl">
+          <div className="relative z-10 p-6 sm:p-7 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 min-h-[210px]">
+            {/* Left Titles - Shifted up with dedicated top alignment & breathing space */}
+            <div className="space-y-1.5 max-w-xl self-start pt-1 sm:pt-2">
               <div className="text-[11px] font-bold text-cyan-400 tracking-widest uppercase drop-shadow-[0_0_6px_#00F0FF]">
                 SMVITM LAB ADMINISTRATION PORTAL
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]">
                 Welcome, {user?.full_name || 'Thrisha K. Puthran'}
               </h2>
-              <div className="text-xs text-slate-200 font-medium">
+              <div className="text-xs sm:text-sm text-slate-200 font-medium">
                 Department of Artificial Intelligence and Data Science
               </div>
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] sm:text-xs text-slate-400">
                 Shri Madhwa Vadiraja Institute of Technology & Management
               </div>
             </div>
 
             {/* Bottom-Right Action Buttons Cluster */}
-            <div className="flex items-center flex-wrap gap-2.5 self-start lg:self-end">
+            <div className="flex items-center flex-wrap gap-2.5 self-start lg:self-end pb-1">
               <button
                 onClick={() => {
                   triggerSelectionGreeting('Connecting to AI Robot!');
@@ -481,16 +409,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
         </div>
 
         {/* ========================================================================= */}
-        {/* ROW 2: INSTRUCTOR ACTION DOCK (EXACT REPLICA OF USER REFERENCE)            */}
+        {/* ROW 2: INSTRUCTOR ACTION DOCK (EXACT REPLICA OF USER REFERENCE IMAGE 2)    */}
         {/* ========================================================================= */}
-        <div className="relative rounded-3xl p-5 bg-[#050C1F]/90 border border-cyan-500/35 shadow-[0_8px_32px_rgba(0,0,0,0.6)] space-y-3.5">
+        <div className="relative rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 bg-[#030919]/95 border border-cyan-400/70 shadow-[0_0_25px_rgba(0,210,255,0.2),inset_0_0_20px_rgba(0,150,255,0.06)] overflow-hidden space-y-3">
+          {/* Futuristic Glowing Tech / Circuit Background */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-10 left-1/4 w-96 h-40 bg-cyan-500/15 rounded-full blur-3xl" />
+            <div className="absolute -bottom-10 right-1/4 w-96 h-40 bg-blue-600/15 rounded-full blur-3xl" />
+            <svg className="absolute inset-0 w-full h-full opacity-25" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="dockLineGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#00f0ff" stopOpacity="0" />
+                  <stop offset="50%" stopColor="#00f0ff" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <line x1="8%" y1="22%" x2="42%" y2="22%" stroke="url(#dockLineGrad)" strokeWidth="1" />
+              <circle cx="42%" cy="22%" r="2" fill="#00f0ff" />
+              <line x1="58%" y1="78%" x2="92%" y2="78%" stroke="url(#dockLineGrad)" strokeWidth="1" />
+              <circle cx="58%" cy="78%" r="2" fill="#3b82f6" />
+              <path d="M 60 8 L 90 8 L 110 24" fill="none" stroke="#00f0ff" strokeWidth="0.8" strokeDasharray="3 3" />
+            </svg>
+          </div>
+
           {/* Header */}
-          <div className="flex items-center space-x-2 text-white font-bold text-sm tracking-wide">
-            <Zap className="h-4.5 w-4.5 text-cyan-400 drop-shadow-[0_0_8px_#00F0FF]" />
+          <div className="relative z-10 flex items-center space-x-2 text-white font-bold text-xs sm:text-sm tracking-wide">
+            <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 drop-shadow-[0_0_8px_#00F0FF]" />
             <span>Instructor Action Dock</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
             
             {/* Option 1: QR Scanner (Cyan Neon Glass) */}
             <button
@@ -498,21 +446,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
                 triggerSelectionGreeting('Scanning Asset QR!');
                 onOpenQRScanner();
               }}
-              className="relative p-4 rounded-2xl bg-gradient-to-br from-[#061e33] to-[#041224] border-2 border-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.35),inset_0_0_12px_rgba(0,240,255,0.08)] text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(0,240,255,0.55)] group flex flex-col justify-between min-h-[105px]"
+              className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#062438]/90 via-[#031828]/95 to-[#020e1a] border border-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.25),inset_0_0_12px_rgba(0,240,255,0.08)] text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(0,240,255,0.45)] group flex flex-col justify-between min-h-[88px] sm:min-h-[92px]"
             >
-              {/* Double Ring Circular Icon */}
-              <div className="w-10 h-10 rounded-full border-2 border-cyan-400 p-[2px] flex items-center justify-center shadow-[0_0_10px_#00F0FF]">
-                <div className="w-full h-full rounded-full border border-cyan-300/80 bg-cyan-950/80 flex items-center justify-center text-cyan-300">
+              {/* Circular Outlined Icon Badge */}
+              <div className="w-8 h-8 rounded-full border border-cyan-400 p-[1.5px] flex items-center justify-center shadow-[0_0_8px_#00F0FF] bg-cyan-950/50">
+                <div className="w-full h-full rounded-full border border-cyan-300/60 flex items-center justify-center text-cyan-300">
                   <QrCode className="h-4 w-4 drop-shadow-[0_0_4px_#00F0FF]" />
                 </div>
               </div>
 
-              <div className="flex items-end justify-between mt-3 w-full">
-                <div>
-                  <div className="text-xs font-bold text-white group-hover:text-cyan-200">QR Scanner</div>
-                  <div className="text-[10px] text-cyan-300/80 font-medium">Scan bench asset</div>
+              <div className="mt-2 w-full">
+                <div className="text-xs sm:text-[13px] font-bold text-white group-hover:text-cyan-200 transition-colors whitespace-nowrap">
+                  QR Scanner
                 </div>
-                <ChevronRight className="h-4 w-4 text-cyan-400 group-hover:translate-x-1 transition" />
+                <div className="flex items-center justify-between mt-0.5 w-full">
+                  <span className="text-[10px] sm:text-[11px] text-cyan-200/70 font-medium whitespace-nowrap">
+                    Scan bench asset
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-cyan-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                </div>
               </div>
             </button>
 
@@ -522,69 +474,81 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
                 triggerSelectionGreeting('Adding Equipment!');
                 onNavigate('inventory');
               }}
-              className="relative p-4 rounded-2xl bg-gradient-to-br from-[#072448] to-[#05142e] border-2 border-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.35),inset_0_0_12px_rgba(56,189,248,0.08)] text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(56,189,248,0.55)] group flex flex-col justify-between min-h-[105px]"
+              className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#052147]/90 via-[#031733]/95 to-[#020d20] border border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25),inset_0_0_12px_rgba(56,189,248,0.08)] text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(56,189,248,0.45)] group flex flex-col justify-between min-h-[88px] sm:min-h-[92px]"
             >
-              {/* Double Ring Circular Icon */}
-              <div className="w-10 h-10 rounded-full border-2 border-sky-400 p-[2px] flex items-center justify-center shadow-[0_0_10px_#38BDF8]">
-                <div className="w-full h-full rounded-full border border-sky-300/80 bg-blue-950/80 flex items-center justify-center text-sky-300">
+              {/* Circular Outlined Icon Badge */}
+              <div className="w-8 h-8 rounded-full border border-sky-400 p-[1.5px] flex items-center justify-center shadow-[0_0_8px_#38BDF8] bg-sky-950/50">
+                <div className="w-full h-full rounded-full border border-sky-300/60 flex items-center justify-center text-sky-300">
                   <Plus className="h-4 w-4 drop-shadow-[0_0_4px_#38BDF8]" />
                 </div>
               </div>
 
-              <div className="flex items-end justify-between mt-3 w-full">
-                <div>
-                  <div className="text-xs font-bold text-white group-hover:text-sky-200">Add Equipment</div>
-                  <div className="text-[10px] text-sky-200/80 font-medium">Register new workstation</div>
+              <div className="mt-2 w-full">
+                <div className="text-xs sm:text-[13px] font-bold text-white group-hover:text-sky-200 transition-colors whitespace-nowrap">
+                  Add Equipment
                 </div>
-                <ChevronRight className="h-4 w-4 text-sky-400 group-hover:translate-x-1 transition" />
+                <div className="flex items-center justify-between mt-0.5 w-full">
+                  <span className="text-[10px] sm:text-[11px] text-sky-200/70 font-medium whitespace-nowrap">
+                    Register new workstation
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-sky-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                </div>
               </div>
             </button>
 
-            {/* Option 3: Report Fault (Electric Magenta Glass) */}
+            {/* Option 3: Report Fault (Electric Purple Glass) */}
             <button
               onClick={() => {
                 triggerSelectionGreeting('Reporting Fault!');
                 onNavigate('faults');
               }}
-              className="relative p-4 rounded-2xl bg-gradient-to-br from-[#240a38] to-[#140520] border-2 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.35),inset_0_0_12px_rgba(217,70,239,0.08)] text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(217,70,239,0.55)] group flex flex-col justify-between min-h-[105px]"
+              className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#240c3d]/90 via-[#170629]/95 to-[#0c0317] border border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.25),inset_0_0_12px_rgba(168,85,247,0.08)] text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(168,85,247,0.45)] group flex flex-col justify-between min-h-[88px] sm:min-h-[92px]"
             >
-              {/* Double Ring Circular Icon */}
-              <div className="w-10 h-10 rounded-full border-2 border-fuchsia-400 p-[2px] flex items-center justify-center shadow-[0_0_10px_#D946EF]">
-                <div className="w-full h-full rounded-full border border-fuchsia-300/80 bg-fuchsia-950/80 flex items-center justify-center text-fuchsia-300">
-                  <Wrench className="h-4 w-4 drop-shadow-[0_0_4px_#D946EF]" />
+              {/* Circular Outlined Icon Badge */}
+              <div className="w-8 h-8 rounded-full border border-purple-400 p-[1.5px] flex items-center justify-center shadow-[0_0_8px_#A855F7] bg-purple-950/50">
+                <div className="w-full h-full rounded-full border border-purple-300/60 flex items-center justify-center text-purple-300">
+                  <Wrench className="h-4 w-4 drop-shadow-[0_0_4px_#A855F7]" />
                 </div>
               </div>
 
-              <div className="flex items-end justify-between mt-3 w-full">
-                <div>
-                  <div className="text-xs font-bold text-white group-hover:text-fuchsia-200">Report Fault</div>
-                  <div className="text-[10px] text-fuchsia-300/80 font-medium">Trigger AI diagnosis</div>
+              <div className="mt-2 w-full">
+                <div className="text-xs sm:text-[13px] font-bold text-white group-hover:text-purple-200 transition-colors whitespace-nowrap">
+                  Report Fault
                 </div>
-                <ChevronRight className="h-4 w-4 text-fuchsia-400 group-hover:translate-x-1 transition" />
+                <div className="flex items-center justify-between mt-0.5 w-full">
+                  <span className="text-[10px] sm:text-[11px] text-purple-200/70 font-medium whitespace-nowrap">
+                    Trigger AI diagnosis
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-purple-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                </div>
               </div>
             </button>
 
-            {/* Option 4: Transfer Request (Electric Purple Glass) */}
+            {/* Option 4: Transfer Request (Electric Magenta Glass) */}
             <button
               onClick={() => {
                 triggerSelectionGreeting('Transfer Request!');
                 onNavigate('transfers');
               }}
-              className="relative p-4 rounded-2xl bg-gradient-to-br from-[#200c3b] to-[#120624] border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.35),inset_0_0_12px_rgba(168,85,247,0.08)] text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(168,85,247,0.55)] group flex flex-col justify-between min-h-[105px]"
+              className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#2b0838]/90 via-[#1c0426]/95 to-[#0e0214] border border-fuchsia-400 shadow-[0_0_12px_rgba(217,70,239,0.25),inset_0_0_12px_rgba(217,70,239,0.08)] text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(217,70,239,0.45)] group flex flex-col justify-between min-h-[88px] sm:min-h-[92px]"
             >
-              {/* Double Ring Circular Icon */}
-              <div className="w-10 h-10 rounded-full border-2 border-purple-400 p-[2px] flex items-center justify-center shadow-[0_0_10px_#A855F7]">
-                <div className="w-full h-full rounded-full border border-purple-300/80 bg-purple-950/80 flex items-center justify-center text-purple-300">
-                  <ArrowRightLeft className="h-4 w-4 drop-shadow-[0_0_4px_#A855F7]" />
+              {/* Circular Outlined Icon Badge */}
+              <div className="w-8 h-8 rounded-full border border-fuchsia-400 p-[1.5px] flex items-center justify-center shadow-[0_0_8px_#D946EF] bg-fuchsia-950/50">
+                <div className="w-full h-full rounded-full border border-fuchsia-300/60 flex items-center justify-center text-fuchsia-300">
+                  <ArrowRightLeft className="h-4 w-4 drop-shadow-[0_0_4px_#D946EF]" />
                 </div>
               </div>
 
-              <div className="flex items-end justify-between mt-3 w-full">
-                <div>
-                  <div className="text-xs font-bold text-white group-hover:text-purple-200">Transfer Request</div>
-                  <div className="text-[10px] text-purple-200/80 font-medium">Relocate to Lab 2</div>
+              <div className="mt-2 w-full">
+                <div className="text-xs sm:text-[13px] font-bold text-white group-hover:text-fuchsia-200 transition-colors whitespace-nowrap">
+                  Transfer Request
                 </div>
-                <ChevronRight className="h-4 w-4 text-purple-400 group-hover:translate-x-1 transition" />
+                <div className="flex items-center justify-between mt-0.5 w-full">
+                  <span className="text-[10px] sm:text-[11px] text-fuchsia-200/70 font-medium whitespace-nowrap">
+                    Relocate to Lab 2
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-fuchsia-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                </div>
               </div>
             </button>
 
@@ -594,21 +558,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
                 triggerSelectionGreeting('Schedule Timetable!');
                 onNavigate('timetable');
               }}
-              className="relative p-4 rounded-2xl bg-gradient-to-br from-[#061e38] to-[#041224] border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.35),inset_0_0_12px_rgba(6,182,212,0.08)] text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(6,182,212,0.55)] group flex flex-col justify-between min-h-[105px]"
+              className="relative p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#042038]/90 via-[#021526]/95 to-[#010c17] border border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25),inset_0_0_12px_rgba(6,182,212,0.08)] text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(6,182,212,0.45)] group flex flex-col justify-between min-h-[88px] sm:min-h-[92px]"
             >
-              {/* Double Ring Circular Icon */}
-              <div className="w-10 h-10 rounded-full border-2 border-cyan-400 p-[2px] flex items-center justify-center shadow-[0_0_10px_#06B6D4]">
-                <div className="w-full h-full rounded-full border border-cyan-300/80 bg-cyan-950/80 flex items-center justify-center text-cyan-300">
+              {/* Circular Outlined Icon Badge */}
+              <div className="w-8 h-8 rounded-full border border-cyan-400 p-[1.5px] flex items-center justify-center shadow-[0_0_8px_#06B6D4] bg-cyan-950/50">
+                <div className="w-full h-full rounded-full border border-cyan-300/60 flex items-center justify-center text-cyan-300">
                   <Clock className="h-4 w-4 drop-shadow-[0_0_4px_#06B6D4]" />
                 </div>
               </div>
 
-              <div className="flex items-end justify-between mt-3 w-full">
-                <div>
-                  <div className="text-xs font-bold text-white group-hover:text-cyan-200">Schedule Timetable</div>
-                  <div className="text-[10px] text-cyan-200/80 font-medium">Reserve lab session</div>
+              <div className="mt-2 w-full">
+                <div className="text-xs sm:text-[13px] font-bold text-white group-hover:text-cyan-200 transition-colors whitespace-nowrap">
+                  Schedule Timetable
                 </div>
-                <ChevronRight className="h-4 w-4 text-cyan-400 group-hover:translate-x-1 transition" />
+                <div className="flex items-center justify-between mt-0.5 w-full">
+                  <span className="text-[10px] sm:text-[11px] text-cyan-200/70 font-medium whitespace-nowrap">
+                    Reserve lab session
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-cyan-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-1" />
+                </div>
               </div>
             </button>
 
@@ -716,91 +684,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, onOpen
           </div>
 
         </div>
-
-      </div>
-
-      {/* ========================================================================= */}
-      {/* RIGHT COLUMN: CYBERNETIC AI ASSISTANT PANEL                                */}
-      {/* ========================================================================= */}
-      <div className="w-full xl:w-80 flex-shrink-0">
-        <div className="sticky top-24 rounded-3xl p-5 bg-[#050C1F]/90 border border-cyan-500/40 shadow-[0_12px_40px_rgba(0,0,0,0.8)] backdrop-blur-2xl flex flex-col h-[calc(100vh-8.5rem)] max-h-[660px] min-h-[500px] relative overflow-hidden">
-          
-          {/* Cyber Corner Notches Accent */}
-          <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-cyan-400" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-cyan-400" />
-          <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-cyan-400" />
-          <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-cyan-400" />
-
-          {/* Panel Header */}
-          <div className="flex items-center space-x-3 pb-4 border-b border-cyan-500/20">
-            <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 to-blue-500 shadow-[0_0_12px_#00F0FF] flex items-center justify-center flex-shrink-0">
-              <div className="w-full h-full rounded-full bg-[#050D24] flex items-center justify-center text-cyan-300">
-                <Bot className="h-6 w-6 animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-bold text-white text-sm drop-shadow-[0_0_6px_rgba(0,240,255,0.4)]">
-                AI Assistant
-              </h3>
-              <p className="text-[11px] text-slate-300 leading-tight">
-                Ask about inventory, faults, reports...
-              </p>
-            </div>
-          </div>
-
-          {/* Chat Messages Stream with Cosmic Starry Wallpaper */}
-          <div
-            className="flex-1 my-3 overflow-y-auto pr-1 space-y-3 rounded-2xl p-3 bg-[#030716]/90 border border-cyan-500/20 shadow-inner relative text-xs"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 1px, transparent 1px)',
-              backgroundSize: '16px 16px'
-            }}
-          >
-            {chatMessages.map(msg => (
-              <div
-                key={msg.id}
-                className={`p-3 rounded-2xl leading-relaxed ${
-                  msg.sender === 'user'
-                    ? 'bg-blue-600/80 text-white ml-6 border border-cyan-400/40 shadow-sm'
-                    : 'bg-[#081736]/90 text-slate-100 mr-2 border border-cyan-500/30 shadow-[0_0_10px_rgba(0,240,255,0.1)]'
-                }`}
-              >
-                <div className="whitespace-pre-line text-[11px]">
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {aiLoading && (
-              <div className="p-2.5 rounded-2xl bg-[#081736]/80 text-cyan-300 text-[11px] flex items-center space-x-2 animate-pulse border border-cyan-500/20">
-                <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                <span>AI analyzing database...</span>
-              </div>
-            )}
-            <div ref={chatBottomRef} />
-          </div>
-
-          {/* Quick Question Input Bar */}
-          <form onSubmit={handleSendAiQuestion} className="pt-2">
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                placeholder="Type your question..."
-                value={aiQuestion}
-                onChange={(e) => setAiQuestion(e.target.value)}
-                className="w-full bg-[#03091B] border border-cyan-500/40 focus:border-cyan-400 rounded-2xl pl-3.5 pr-10 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.35)] transition"
-              />
-              <button
-                type="submit"
-                disabled={!aiQuestion.trim() || aiLoading}
-                className="absolute right-2 p-1.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white disabled:opacity-40 transition shadow-[0_0_8px_#00F0FF]"
-              >
-                <Send className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </form>
-
-        </div>
-      </div>
 
       {/* ========================================================================= */}
       {/* CRITICAL: PRESERVE EXISTING AI ROBOT ASSISTANT UNCHANGED                  */}

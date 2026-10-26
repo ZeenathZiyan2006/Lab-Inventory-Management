@@ -177,11 +177,21 @@ export const LoginPage: React.FC = () => {
         body: formData.toString(),
       });
 
-      // Compare entered name with registered name ignoring case and extra whitespace
+      // Compare entered name with registered name ignoring case, honorifics, and whitespace
       const registeredName = (data.full_name || '').trim().toLowerCase();
       const enteredName = trimmedFullName.toLowerCase();
 
-      if (registeredName && enteredName !== registeredName) {
+      // Normalize honorifics and allow partial or clean match
+      const normalize = (s: string) => s.replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, '').replace(/[\s\.]+/g, '');
+      const normReg = normalize(registeredName);
+      const normEnt = normalize(enteredName);
+
+      const isMatch = registeredName === enteredName || 
+                      normReg === normEnt || 
+                      normReg.includes(normEnt) || 
+                      normEnt.includes(normReg);
+
+      if (registeredName && !isMatch) {
         setError('The entered full name does not match this account.');
         return;
       }
@@ -665,53 +675,53 @@ export const LoginPage: React.FC = () => {
 
                 {demoOpen && (
                   <div className="mt-2 pt-2 border-t border-slate-200/60">
-                    <p className="text-[10px] text-slate-400 mb-1.5">
-                      Test accounts for local environment testing. Staff identities and roles are managed dynamically in the database.
+                    <p className="text-[10px] text-slate-500 mb-2">
+                      Institutional Demo Accounts (Universal Password: <span className="font-mono font-bold text-slate-700 bg-slate-200 px-1 py-0.5 rounded">Demo@123</span>):
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                       <button
                         type="button"
-                        onClick={() => setDemoUser('Lab Instructor', 'instructor@sode-edu.in', 'Instructor@123')}
+                        onClick={() => setDemoUser('Chitrakala', 'instructor@sode-edu.in', 'Demo@123')}
                         className="px-2 py-1 bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0369A1] border border-[#BAE6FD] rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition text-left"
                       >
                         <FlaskConical className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">Instructor Test</span>
+                        <span className="truncate">Chitrakala (Instructor)</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setDemoUser('Technician', 'technician@sode-edu.in', 'Tech@123')}
+                        onClick={() => setDemoUser('Technician', 'technician@sode-edu.in', 'Demo@123')}
                         className="px-2 py-1 bg-[#FEF3C7] hover:bg-[#FDE68A] text-[#B45309] border border-[#FDE68A] rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition text-left"
                       >
                         <Wrench className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">Technician Test</span>
+                        <span className="truncate">Technician</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setDemoUser('HOD', 'hod.aids@sode-edu.in', 'Hod@123')}
+                        onClick={() => setDemoUser('Tejaswini H', 'hod.aids@sode-edu.in', 'Demo@123')}
                         className="px-2 py-1 bg-[#DCFCE7] hover:bg-[#BBF7D0] text-[#15803D] border border-[#BBF7D0] rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition text-left"
                       >
                         <UserCheck className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">HOD Test</span>
+                        <span className="truncate">Tejaswini H (HOD)</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setDemoUser('Principal', 'principal@sode-edu.in', 'Principal@123')}
+                        onClick={() => setDemoUser('Dr. Nagaraj Bhat', 'principal@sode-edu.in', 'Demo@123')}
                         className="px-2 py-1 bg-[#FFE4E6] hover:bg-[#FECDD3] text-[#9F1239] border border-[#FECDD3] rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition text-left"
                       >
                         <Award className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">Principal Test</span>
+                        <span className="truncate">Dr. Nagaraj Bhat (Principal)</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setDemoUser('Administrator', 'admin@sode-edu.in', 'Admin@123')}
+                        onClick={() => setDemoUser('Thrisha', 'admin@sode-edu.in', 'Demo@123')}
                         className="px-2 py-1 bg-[#F3E8FF] hover:bg-[#E9D5FF] text-[#6B21A8] border border-[#E9D5FF] rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition text-left col-span-2 sm:col-span-1"
                       >
                         <KeyRound className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">Admin Test</span>
+                        <span className="truncate">Thrisha (Admin)</span>
                       </button>
                     </div>
                   </div>
