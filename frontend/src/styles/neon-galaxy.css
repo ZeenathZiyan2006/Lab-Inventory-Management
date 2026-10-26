@@ -123,8 +123,76 @@
   color: #E2E8F0 !important;
 }
 
-.neon-galaxy-shell main tr:hover td:not(.assistant-isolated *) {
-  background-color: rgba(0, 240, 255, 0.06) !important;
+/* Universal Table Row Hover & Selected States */
+.neon-galaxy-shell main tbody tr:not(.assistant-isolated *):hover,
+.neon-galaxy-shell main tr[class*="hover:bg-"]:hover {
+  background-color: rgba(0, 240, 255, 0.09) !important;
+  box-shadow: inset 0 0 16px rgba(0, 240, 255, 0.07), inset 3px 0 0 #00F0FF !important;
+}
+
+.neon-galaxy-shell main tbody tr:not(.assistant-isolated *):hover td,
+.neon-galaxy-shell main tr[class*="hover:bg-"]:hover td {
+  background-color: transparent !important;
+  color: #FFFFFF !important;
+}
+
+/* Approved / highlighted rows in dark cyber style */
+.neon-galaxy-shell main tr[class*="bg-emerald"],
+.neon-galaxy-shell main tr.bg-emerald-50\/60 {
+  background-color: rgba(6, 78, 59, 0.32) !important;
+  border-left: 4px solid #10B981 !important;
+  box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.15) !important;
+}
+
+.neon-galaxy-shell main tr[class*="bg-emerald"] td,
+.neon-galaxy-shell main tr.bg-emerald-50\/60 td {
+  background-color: transparent !important;
+  color: #F8FAFC !important;
+}
+
+.neon-galaxy-shell main tr[class*="bg-emerald"]:hover,
+.neon-galaxy-shell main tr.bg-emerald-50\/60:hover {
+  background-color: rgba(6, 78, 59, 0.48) !important;
+  box-shadow: inset 0 0 24px rgba(16, 185, 129, 0.25) !important;
+}
+
+.neon-galaxy-shell main tr[class*="bg-emerald"]:hover td,
+.neon-galaxy-shell main tr.bg-emerald-50\/60:hover td {
+  background-color: transparent !important;
+  color: #FFFFFF !important;
+}
+
+/* High contrast hover for generic option pills and list items */
+.neon-galaxy-shell main [class*="hover:bg-slate-50"]:hover,
+.neon-galaxy-shell main [class*="hover:bg-gray-50"]:hover,
+.neon-galaxy-shell main [class*="hover:bg-slate-100"]:hover,
+.neon-galaxy-shell main [class*="hover:bg-gray-100"]:hover {
+  background-color: rgba(0, 240, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+/* Native and Custom Dropdown Options */
+.neon-galaxy-shell select option,
+.neon-galaxy-shell option {
+  background-color: #071530 !important;
+  color: #F8FAFC !important;
+  padding: 8px 12px !important;
+}
+
+.neon-galaxy-shell select option:hover,
+.neon-galaxy-shell select option:focus,
+.neon-galaxy-shell select option:checked,
+.neon-galaxy-shell option:hover,
+.neon-galaxy-shell option:checked {
+  background-color: #0284C7 !important;
+  color: #FFFFFF !important;
+}
+
+.neon-galaxy-shell [role="option"]:hover,
+.neon-galaxy-shell [role="menuitem"]:hover,
+.neon-galaxy-shell .dropdown-item:hover {
+  background-color: rgba(0, 240, 255, 0.15) !important;
+  color: #FFFFFF !important;
 }
 
 /* Inputs, Selects, and Textareas */

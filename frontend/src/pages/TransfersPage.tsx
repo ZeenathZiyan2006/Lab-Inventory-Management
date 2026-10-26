@@ -624,13 +624,13 @@ export const TransfersPage: React.FC = () => {
                   return (
                   <tr 
                     key={item.id} 
-                    className={`transition ${
+                    className={`transition duration-150 border-b border-cyan-500/10 ${
                       isOfficiallyApproved 
-                        ? 'bg-emerald-50/60 hover:bg-emerald-50/80 border-l-4 border-l-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
-                        : 'hover:bg-slate-50/80'
+                        ? 'bg-emerald-950/40 hover:bg-emerald-900/50 border-l-4 border-l-emerald-400 shadow-[inset_0_0_20px_rgba(16,185,129,0.16)]' 
+                        : 'hover:bg-cyan-950/40 hover:shadow-[inset_0_0_15px_rgba(0,240,255,0.08)]'
                     }`}
                   >
-                    <td className="py-3.5 px-4 font-mono font-bold text-navy-900">
+                    <td className="py-3.5 px-4 font-mono font-bold text-white tracking-wide">
                       {item.request_number}
                       <div className="text-[10px] text-slate-400 font-sans mt-0.5">
                         {new Date(item.created_at).toLocaleDateString()} &bull; By {item.requested_by_name || `User #${item.requested_by_id}`}
@@ -638,12 +638,12 @@ export const TransfersPage: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center space-x-1.5 font-medium text-slate-800">
-                        <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-700">
+                      <div className="flex items-center space-x-1.5 font-medium text-slate-200">
+                        <span className="px-2 py-0.5 bg-slate-800/80 border border-slate-700/60 rounded text-[10px] font-semibold text-cyan-300">
                           {item.source_lab_name || `Lab ${item.source_lab_id}`}
                         </span>
-                        <span className="text-slate-400">&rarr;</span>
-                        <span className="px-1.5 py-0.5 bg-blue-50 rounded text-[10px] font-semibold text-blue-800">
+                        <span className="text-cyan-400 font-bold">&rarr;</span>
+                        <span className="px-2 py-0.5 bg-blue-950/70 border border-blue-500/40 rounded text-[10px] font-semibold text-blue-300">
                           {item.destination_lab_name || `Lab ${item.destination_lab_id}`}
                         </span>
                       </div>
@@ -652,23 +652,23 @@ export const TransfersPage: React.FC = () => {
                     <td className="py-3.5 px-4">
                       {item.asset_custom_id ? (
                         <div>
-                          <span className="font-mono font-bold text-slate-900 block">{item.asset_custom_id}</span>
-                          <span className="text-slate-600 text-[11px] block">{item.asset_name} (1 Unit)</span>
+                          <span className="font-mono font-bold text-cyan-200 block drop-shadow-xs">{item.asset_custom_id}</span>
+                          <span className="text-slate-300 text-[11px] block">{item.asset_name} (1 Unit)</span>
                         </div>
                       ) : (
                         <div>
-                          <span className="font-semibold text-slate-900 block">{item.bulk_item_name || 'Bulk Item'}</span>
-                          <span className="text-slate-500 text-[11px]">Qty: {item.quantity} Units</span>
+                          <span className="font-semibold text-white block">{item.bulk_item_name || 'Bulk Item'}</span>
+                          <span className="text-slate-400 text-[11px]">Qty: {item.quantity} Units</span>
                         </div>
                       )}
                     </td>
 
                     <td className="py-3.5 px-4 max-w-xs">
-                      <div className="text-slate-700 truncate">{item.reason}</div>
+                      <div className="text-slate-200 font-normal truncate">{item.reason}</div>
                       <div className="mt-0.5">
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
-                          item.priority === 'Critical' ? 'bg-rose-100 text-rose-800' :
-                          item.priority === 'High' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                          item.priority === 'Critical' ? 'bg-rose-950/60 text-rose-300 border-rose-500/40' :
+                          item.priority === 'High' ? 'bg-amber-950/60 text-amber-300 border-amber-500/40' : 'bg-slate-800/60 text-slate-300 border-slate-700/60'
                         }`}>
                           {item.priority}
                         </span>
@@ -713,7 +713,7 @@ export const TransfersPage: React.FC = () => {
                             setSelectedDetail(item);
                           }
                         }}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-medium transition"
+                        className="px-2.5 py-1 bg-slate-800/80 hover:bg-cyan-950/70 text-slate-200 hover:text-cyan-300 border border-slate-700/60 hover:border-cyan-400/40 rounded-lg text-[11px] font-medium transition shadow-xs"
                       >
                         <Eye className="h-3 w-3 inline mr-1" />
                         Details

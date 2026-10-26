@@ -81,6 +81,20 @@ export const LabsPage: React.FC = () => {
     }
   }, []);
 
+  // Keyboard shortcut: ESC to dismiss any open modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPlacardData(null);
+        setShowModal(false);
+      }
+    };
+    if (placardData || showModal) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [placardData, showModal]);
+
   const loadLabs = async () => {
     setLoading(true);
     try {
@@ -330,9 +344,15 @@ export const LabsPage: React.FC = () => {
 
       {/* Create / Edit Laboratory Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150">
-            <div className="bg-navy-900 text-white p-5 flex justify-between items-center">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-150"
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-navy-900 text-white p-5 flex justify-between items-center sticky top-0 z-10 border-b border-cyan-500/20">
               <div className="flex items-center space-x-2">
                 <Building2 className="h-5 w-5 text-cyan-400" />
                 <h3 className="font-semibold text-base">
@@ -340,6 +360,7 @@ export const LabsPage: React.FC = () => {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowModal(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800 transition"
               >
@@ -347,7 +368,7 @@ export const LabsPage: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSaveLab} className="p-6 space-y-4">
+            <form onSubmit={handleSaveLab} className="p-6 space-y-4 overflow-y-auto flex-1">
               {formError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">
                   {formError}
@@ -465,23 +486,43 @@ export const LabsPage: React.FC = () => {
 
       {/* Printable Door Placard Modal */}
       {placardData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-150"
+          onClick={() => setPlacardData(null)}
+        >
+          {/* Top-Right Floating Dismiss Button (Guaranteed always visible on screen) */}
+          <button
+            type="button"
+            onClick={() => setPlacardData(null)}
+            className="fixed top-4 right-4 z-[80] flex items-center space-x-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-extrabold shadow-[0_0_25px_rgba(244,63,94,0.8)] transition active:scale-95 border border-rose-300 cursor-pointer"
+            title="Close Placard (Esc)"
+          >
+            <X className="h-4 w-4" />
+            <span>Close (Esc)</span>
+          </button>
+
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Sticky at top */}
+            <div className="bg-navy-900 text-white p-3.5 px-5 flex justify-between items-center sticky top-0 z-20 border-b border-cyan-500/20">
               <div className="flex items-center space-x-2">
                 <QrCode className="h-5 w-5 text-cyan-400" />
                 <h3 className="font-semibold text-sm">Laboratory Door Placard</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setPlacardData(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800 transition"
+                className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-rose-500/30 transition border border-slate-600 hover:border-rose-400"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Placard Card (Printable Sheet) */}
-            <div id="door-placard-sheet" className="p-6 bg-white space-y-4 text-center">
+            {/* Placard Card (Printable Sheet) - Scrollable if tall */}
+            <div id="door-placard-sheet" className="p-5 bg-white space-y-3.5 text-center overflow-y-auto flex-1">
               {/* College Header */}
               <div className="flex flex-col items-center border-b pb-3 border-slate-200">
                 <img
@@ -535,16 +576,19 @@ export const LabsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
+            {/* Footer - Sticky at bottom */}
+            <div className="bg-slate-50 p-3.5 px-5 border-t border-slate-200 flex justify-between items-center sticky bottom-0 z-20">
               <button
+                type="button"
                 onClick={() => setPlacardData(null)}
-                className="px-4 py-1.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-100 transition"
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-100 transition active:scale-95"
               >
-                Close
+                Close Placard
               </button>
               <button
+                type="button"
                 onClick={handlePrint}
-                className="flex items-center space-x-1.5 px-4 py-1.5 bg-navy-900 hover:bg-navy-800 text-white rounded-lg text-xs font-semibold transition"
+                className="flex items-center space-x-1.5 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm"
               >
                 <Printer className="h-4 w-4 text-cyan-400" />
                 <span>Print Placard</span>
