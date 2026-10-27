@@ -8,7 +8,7 @@ interface LogoutThankYouScreenProps {
 
 export const LogoutThankYouScreen: React.FC<LogoutThankYouScreenProps> = ({
   onGoToLogin,
-  countdownSeconds = 60
+  countdownSeconds = 20
 }) => {
   const [secondsLeft, setSecondsLeft] = useState<number>(countdownSeconds);
   const [isWaving, setIsWaving] = useState<boolean>(true);
@@ -205,9 +205,8 @@ export const LogoutThankYouScreen: React.FC<LogoutThankYouScreenProps> = ({
               <p className="font-medium text-slate-200">
                 You’ve been logged out successfully.
               </p>
-              <p className="font-semibold text-cyan-300 flex items-center space-x-1">
-                <span>See you again soon!</span>
-                <span className="text-cyan-400">💙</span>
+              <p className="font-semibold text-cyan-300">
+                See you again soon!
               </p>
             </div>
 

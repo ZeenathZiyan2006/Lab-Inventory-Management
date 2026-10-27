@@ -20,9 +20,10 @@ import { ReportsPage } from './pages/ReportsPage';
 import { UsersPage } from './pages/UsersPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { LogoutThankYouScreen } from './components/LogoutThankYouScreen';
+import { WelcomeScreen } from './components/WelcomeScreen';
 
 export const App: React.FC = () => {
-  const { user, isLoading, isLoggedOut, resetLogout } = useAuth();
+  const { user, isLoading, isLoggedOut, resetLogout, justLoggedIn, dismissWelcome } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [initialScanToken, setInitialScanToken] = useState<string>('');
@@ -57,13 +58,23 @@ export const App: React.FC = () => {
     return (
       <LogoutThankYouScreen
         onGoToLogin={() => resetLogout()}
-        countdownSeconds={60}
+        countdownSeconds={20}
       />
     );
   }
 
   if (!user) {
     return <LoginPage />;
+  }
+
+  // 2-Second Personalized Welcome Screen on Fresh Login (Reference Images 1, 2, 3)
+  if (justLoggedIn && user) {
+    return (
+      <WelcomeScreen
+        user={user}
+        onFinish={dismissWelcome}
+      />
+    );
   }
 
   const renderCurrentPage = () => {
@@ -124,10 +135,10 @@ export const App: React.FC = () => {
         onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
       />
 
-      {/* Main Body with Sidebar & Content */}
-      <div className="flex flex-1 relative z-10">
+      {/* Main Body with Sticky Sidebar & Scrollable Content */}
+      <div className="flex flex-1 relative z-10 items-start">
         
-        {/* Role-Aware Sidebar */}
+        {/* Role-Aware Sticky Sidebar */}
         <Sidebar
           currentPage={currentPage}
           onSelectPage={(p) => setCurrentPage(p)}

@@ -224,6 +224,22 @@ export const RequestsPage: React.FC = () => {
     }
   }, [showCreateModal, labId]);
 
+  // Global Escape key listener to close active purchase request modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCreateModal(false);
+        setSelectedDetail(null);
+        setShowApprovalModal(null);
+        setShowPOModal(null);
+        setShowReceiptModal(null);
+        setShowRetireModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const loadLabs = async () => {
     try {
       const data = await apiRequest<Laboratory[]>('/labs');

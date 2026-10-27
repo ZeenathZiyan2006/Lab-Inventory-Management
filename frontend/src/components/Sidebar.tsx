@@ -119,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const visibleItems = navItems.filter(item => item.roles.includes(role));
 
   const content = (
-    <div className="flex flex-col justify-between h-full p-3.5 relative z-10 overflow-y-auto max-h-screen">
+    <div className="flex flex-col justify-between h-full p-3.5 relative z-10 overflow-y-auto scrollbar-none">
       <div>
         {/* Navigation Menu Header */}
         <div className="flex justify-between items-center px-3 py-2 mb-2">
@@ -191,8 +191,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Desktop sidebar rounded card */}
-      <aside className="hidden lg:block w-64 m-4 mr-0 rounded-3xl bg-[#050C1D]/85 border border-cyan-500/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex-shrink-0 min-h-[calc(100vh-6.5rem)] relative overflow-hidden">
+      {/* Desktop sidebar rounded card - Constant / Sticky Navigation Menu */}
+      <aside className="hidden lg:block w-64 m-4 mr-0 rounded-3xl bg-[#050C1D]/85 border border-cyan-500/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex-shrink-0 sticky top-24 self-start h-[calc(100vh-6.75rem)] max-h-[calc(100vh-6.75rem)] overflow-hidden z-30">
         {/* Subtle corner glow accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
         {content}

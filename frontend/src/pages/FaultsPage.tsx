@@ -247,6 +247,25 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
     loadFaults();
   }, []);
 
+  // Global ESC key listener to close any active modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowReportModal(false);
+        setSelectedDetailFault(null);
+        setShowAssignModal(null);
+        setShowWorkspaceModal(null);
+        setShowVerifyModal(null);
+        setShowRejectModal(null);
+        setShowReopenModal(null);
+        setShowUnableDialog(false);
+        setShowReplacementDialog(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // When initialAssetId is passed via QR or Inventory navigation
   useEffect(() => {
     if (initialAssetId) {
@@ -1187,19 +1206,27 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 1: REPORT EQUIPMENT FAULT                          */}
       {/* ======================================================== */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <div className="flex items-center space-x-2">
                 <Wrench className="h-5 w-5 text-rose-400" />
                 <h3 className="font-semibold text-sm">Report Laboratory Equipment Fault</h3>
               </div>
-              <button onClick={() => setShowReportModal(false)} className="text-slate-400 hover:text-white">
+              <button 
+                type="button" 
+                onClick={() => setShowReportModal(false)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitReport} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmitReport} className="p-6 space-y-4 text-xs overflow-y-auto">
               {reportError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
                   {reportError}
@@ -1415,9 +1442,12 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 2: TICKET DETAILS & LIFECYCLE AUDIT TIMELINE       */}
       {/* ======================================================== */}
       {selectedDetailFault && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedDetailFault(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <div className="flex items-center space-x-2">
                 <FileText className="h-5 w-5 text-cyan-400" />
                 <div>
@@ -1425,12 +1455,16 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
                   <p className="text-[10px] text-slate-400">{selectedDetailFault.title || selectedDetailFault.description.slice(0, 50)}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedDetailFault(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setSelectedDetailFault(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               
               {/* Prominent Safety Hazard Warning Banner */}
               {selectedDetailFault.is_safety_hazard && (
@@ -1632,15 +1666,22 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 3: ASSIGN TECHNICIAN MODAL                         */}
       {/* ======================================================== */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAssignModal(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <h3 className="font-semibold text-sm">Assign Technician: {showAssignModal.report_number}</h3>
-              <button onClick={() => setShowAssignModal(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowAssignModal(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               {assignError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
                   {assignError}
@@ -1710,9 +1751,12 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 4: TECHNICIAN REPAIR WORKSPACE                     */}
       {/* ======================================================== */}
       {showWorkspaceModal && showWorkspaceModal.repair_job && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowWorkspaceModal(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <div className="flex items-center space-x-2">
                 <Wrench className="h-5 w-5 text-amber-400" />
                 <div>
@@ -1722,12 +1766,16 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
                   </p>
                 </div>
               </div>
-              <button onClick={() => setShowWorkspaceModal(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowWorkspaceModal(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               {wsError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
                   {wsError}
@@ -2006,15 +2054,22 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 5: LAB INSTRUCTOR VERIFICATION                      */}
       {/* ======================================================== */}
       {showVerifyModal && showVerifyModal.repair_job && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowVerifyModal(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <h3 className="font-semibold text-sm">Verify Completed Repair: {showVerifyModal.report_number}</h3>
-              <button onClick={() => setShowVerifyModal(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowVerifyModal(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               {verifyError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
                   {verifyError}
@@ -2127,15 +2182,22 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 6: REJECT TICKET (For invalid reports)              */}
       {/* ======================================================== */}
       {showRejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowRejectModal(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <h3 className="font-semibold text-sm">Reject Fault Report: {showRejectModal.report_number}</h3>
-              <button onClick={() => setShowRejectModal(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowRejectModal(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               <p className="text-slate-600">
                 Rejecting this ticket will close it with a rejected status. A mandatory explanation is required for the audit record.
               </p>
@@ -2175,15 +2237,22 @@ export const FaultsPage: React.FC<FaultsPageProps> = ({
       {/* MODAL 7: REOPEN TICKET                                   */}
       {/* ======================================================== */}
       {showReopenModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
-            <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowReopenModal(null); }}
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full my-auto max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div className="bg-navy-900 text-white p-4 flex justify-between items-center shrink-0">
               <h3 className="font-semibold text-sm">Reopen Ticket: {showReopenModal.report_number}</h3>
-              <button onClick={() => setShowReopenModal(null)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowReopenModal(null)} 
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+                title="Close (Esc)"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs overflow-y-auto">
               <p className="text-slate-600">
                 Reopening a closed ticket returns it to the active fault queue. Provide technical justification.
               </p>

@@ -206,6 +206,22 @@ export const TransfersPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Global Escape key listener to close active transfer modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowRequestModal(false);
+        setSelectedDetail(null);
+        setShowApprovalModal(null);
+        setShowDispatchModal(null);
+        setShowReceiveModal(null);
+        setShowHistoryModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   useEffect(() => {
     if (showRequestModal && sourceLab) {
       loadSourceInventory(sourceLab);
@@ -794,7 +810,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 1: REQUEST INTER-LAB TRANSFER                     */}
       {/* ======================================================== */}
       {showRequestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowRequestModal(false);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
             <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
               <div className="flex items-center space-x-2">
@@ -1006,7 +1027,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 2: TRANSFER DETAILS & TIMELINE AUDIT               */}
       {/* ======================================================== */}
       {selectedDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedDetail(null);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
             <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
               <div>
@@ -1164,7 +1190,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 3: APPROVE / REJECT TRANSFER (HOD/Principal)       */}
       {/* ======================================================== */}
       {showApprovalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowApprovalModal(null);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
             <div className={`p-4 flex justify-between items-center text-white ${
               isPrincipal ? 'bg-gradient-to-r from-[#170C3A] via-[#241457] to-[#120B30] border-b border-purple-500/30' : 'bg-navy-900'
@@ -1370,7 +1401,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 4: DISPATCH CONFIRMATION                           */}
       {/* ======================================================== */}
       {showDispatchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowDispatchModal(null);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
             <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
               <h3 className="font-semibold text-sm">Dispatch Equipment: {showDispatchModal.request_number}</h3>
@@ -1417,7 +1453,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 5: RECEIVE & CONFIRM RECEIPT                       */}
       {/* ======================================================== */}
       {showReceiveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowReceiveModal(null);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
             <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
               <h3 className="font-semibold text-sm">Confirm Receipt: {showReceiveModal.request_number}</h3>
@@ -1500,7 +1541,12 @@ export const TransfersPage: React.FC = () => {
       {/* MODAL 6: STOCK MOVEMENT LEDGER                           */}
       {/* ======================================================== */}
       {showLedgerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLedgerModal(false);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-slate-200">
             <div className="bg-navy-900 text-white p-4 flex justify-between items-center">
               <div className="flex items-center space-x-2">

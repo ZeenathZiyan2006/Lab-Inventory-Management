@@ -120,6 +120,18 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     }
   }, [isOpen, initialToken]);
 
+  // Global Escape key listener to close scanner modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleTokenResolution = async (token: string) => {
@@ -174,30 +186,46 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="bg-[#081026] text-slate-100 rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.85)] max-w-lg w-full overflow-hidden border border-cyan-500/30 animate-in fade-in zoom-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      {/* High-Contrast Floating Close Badge */}
+      <button
+        onClick={onClose}
+        className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[80] px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold shadow-2xl transition flex items-center space-x-1.5 border border-white/20 active:scale-95"
+        title="Close Scanner (Esc)"
+      >
+        <X className="h-4 w-4" />
+        <span>Close (Esc)</span>
+      </button>
+
+      <div className="bg-[#081026] text-slate-100 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] max-w-lg w-full max-h-[92vh] flex flex-col my-auto overflow-hidden border border-cyan-500/40 animate-in fade-in zoom-in duration-150 relative">
         
-        {/* Header */}
-        <div className="bg-[#0B1736] text-white p-5 flex justify-between items-center border-b border-cyan-500/25">
+        {/* Sticky Header */}
+        <div className="bg-[#0B1736] text-white p-4 sm:p-5 flex justify-between items-center border-b border-cyan-500/25 shrink-0 sticky top-0 z-20">
           <div className="flex items-center space-x-2.5">
             <div className="p-2 bg-cyan-950/80 rounded-xl border border-cyan-400/40 shadow-[0_0_10px_rgba(0,240,255,0.25)]">
               <QrCode className="h-5 w-5 text-cyan-400 drop-shadow-[0_0_4px_#00F0FF]" />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight text-white drop-shadow-[0_0_8px_rgba(0,240,255,0.3)]">SMVITM QR Asset Scanner</h3>
-              <p className="text-[11px] text-cyan-300/80">Scan QR Sticker or Lookup Asset Tag / Serial Number</p>
+              <h3 className="font-bold text-sm sm:text-base leading-tight text-white drop-shadow-[0_0_8px_rgba(0,240,255,0.3)]">SMVITM QR Asset Scanner</h3>
+              <p className="text-[10px] sm:text-[11px] text-cyan-300/80">Scan QR Sticker or Lookup Asset Tag / Serial Number</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-900/60 text-slate-300 hover:text-white border border-slate-700/60 hover:border-rose-500/50 transition flex items-center space-x-1"
+            title="Close (Esc)"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        {/* Modal Body - Fully Scrollable */}
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
           
           {/* Camera Permission Alert (If active) */}
           {cameraPermissionError && (
@@ -434,13 +462,15 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
 
         </div>
 
-        {/* Footer */}
-        <div className="bg-[#050C1A] px-6 py-3 border-t border-cyan-500/20 flex justify-end">
+        {/* Sticky Footer */}
+        <div className="bg-[#050C1A] px-4 sm:px-6 py-3 border-t border-cyan-500/20 flex items-center justify-between shrink-0 sticky bottom-0 z-20">
+          <span className="text-[10px] sm:text-[11px] text-slate-400">Click outside or press Esc to close</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition border border-slate-700"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition border border-slate-700 flex items-center space-x-1.5 shadow-xs"
           >
-            Close
+            <X className="h-3.5 w-3.5" />
+            <span>Close Scanner</span>
           </button>
         </div>
 

@@ -199,6 +199,20 @@ export const InventoryPage: React.FC = () => {
     loadInventory();
   }, [selectedLab, statusFilter, categoryFilter, search, tab, page, pageSize, sortBy, sortOrder, includeRetired]);
 
+  // Global Escape key listener to close any active modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedAssetDetail(null);
+        setEditingAsset(null);
+        setShowStatusModal(null);
+        setShowAdjustBulk(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const loadLabs = async () => {
     try {
       const data = await apiRequest<Laboratory[]>('/labs');
@@ -974,9 +988,24 @@ export const InventoryPage: React.FC = () => {
 
       {/* Asset Lifecycle Details Modal */}
       {selectedAssetDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150">
-            <div className="bg-navy-900 text-white p-5 flex justify-between items-center">
+        <div
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedAssetDetail(null);
+          }}
+        >
+          {/* Floating Close Badge */}
+          <button
+            onClick={() => setSelectedAssetDetail(null)}
+            className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[80] px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold shadow-2xl transition flex items-center space-x-1.5 border border-white/20 active:scale-95"
+            title="Close (Esc)"
+          >
+            <X className="h-4 w-4" />
+            <span>Close (Esc)</span>
+          </button>
+
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col my-auto overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 relative">
+            <div className="bg-navy-900 text-white p-4 sm:p-5 flex justify-between items-center shrink-0 sticky top-0 z-10">
               <div>
                 <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider block">Equipment Lifecycle & History</span>
                 <h3 className="font-bold text-base mt-0.5">{selectedAssetDetail.name}</h3>
@@ -990,7 +1019,7 @@ export const InventoryPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 text-xs">
               {/* Specification Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div>
@@ -1063,7 +1092,7 @@ export const InventoryPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center">
+            <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center shrink-0 sticky bottom-0 z-10">
               <button
                 onClick={() => handlePrintLabel(selectedAssetDetail.id)}
                 className="flex items-center space-x-1 text-slate-700 hover:text-navy-900 font-semibold text-xs"

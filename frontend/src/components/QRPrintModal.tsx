@@ -24,6 +24,16 @@ export const QRPrintModal: React.FC<QRPrintModalProps> = ({
   onClose,
   labelData,
 }) => {
+  // ESC key listener to safely close modal from keyboard
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !labelData) return null;
 
   const handlePrint = () => {
@@ -68,11 +78,26 @@ export const QRPrintModal: React.FC<QRPrintModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      {/* High-Contrast Floating Close Badge */}
+      <button
+        onClick={onClose}
+        className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[80] px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold shadow-2xl transition flex items-center space-x-1.5 border border-white/20 active:scale-95"
+        title="Close (Esc)"
+      >
+        <X className="h-4 w-4" />
+        <span>Close (Esc)</span>
+      </button>
+
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col my-auto overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 relative">
         
-        {/* Header */}
-        <div className="bg-navy-900 text-white p-4.5 px-6 flex justify-between items-center">
+        {/* Header - Sticky */}
+        <div className="bg-navy-900 text-white p-4 sm:p-4.5 px-6 flex justify-between items-center shrink-0 sticky top-0 z-20">
           <div className="flex items-center space-x-2.5">
             <ShieldCheck className="h-5 w-5 text-cyan-400" />
             <div>
@@ -88,8 +113,8 @@ export const QRPrintModal: React.FC<QRPrintModalProps> = ({
           </button>
         </div>
 
-        {/* Printable Label Area */}
-        <div className="p-6 space-y-4">
+        {/* Printable Label Area - Scrollable */}
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
           <div
             id="printable-sticker"
             className="border-2 border-dashed border-navy-800 rounded-2xl p-5 bg-slate-50 text-center space-y-3 shadow-inner"
@@ -165,8 +190,8 @@ export const QRPrintModal: React.FC<QRPrintModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Action Footer with PNG, SVG, and Print controls */}
-        <div className="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        {/* Modal Action Footer with PNG, SVG, and Print controls - Sticky */}
+        <div className="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0 sticky bottom-0 z-20">
           <button
             onClick={onClose}
             className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-medium transition"

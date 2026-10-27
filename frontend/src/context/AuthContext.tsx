@@ -20,6 +20,8 @@ interface AuthContextType {
   logout: () => void;
   isLoggedOut: boolean;
   resetLogout: () => void;
+  justLoggedIn: boolean;
+  dismissWelcome: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(getAuthToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoggedOut, setIsLoggedOut] = useState<boolean>(false);
+  const [justLoggedIn, setJustLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -54,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(newToken);
     setUser(userData);
     setIsLoggedOut(false);
+    setJustLoggedIn(true);
   };
 
   const logout = () => {
@@ -61,14 +65,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     setIsLoggedOut(true);
+    setJustLoggedIn(false);
   };
 
   const resetLogout = () => {
     setIsLoggedOut(false);
   };
 
+  const dismissWelcome = () => {
+    setJustLoggedIn(false);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isLoggedOut, resetLogout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      isLoading, 
+      login, 
+      logout, 
+      isLoggedOut, 
+      resetLogout,
+      justLoggedIn,
+      dismissWelcome
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -288,11 +288,23 @@ body > .fixed .bg-slate-50:not(.assistant-isolated *) {
   border-color: rgba(0, 240, 255, 0.2) !important;
 }
 
-/* Modal Viewport Fit and Safe Overflow */
+/* Modal Viewport Fit, Safe Overflow & Starting Head Position Protection */
+.neon-galaxy-shell .fixed.inset-0,
+body > .fixed.inset-0 {
+  align-items: flex-start !important;
+  padding-top: max(1rem, 2.5vh) !important;
+  padding-bottom: max(1rem, 2.5vh) !important;
+  overflow-y: auto !important;
+}
+
 .neon-galaxy-shell .fixed.inset-0 > div,
 body > .fixed.inset-0 > div {
+  max-height: 92vh !important;
   max-height: 92dvh !important;
-  margin: auto !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Utility to completely hide ugly native scrollbar arrows while allowing smooth scrolling */
